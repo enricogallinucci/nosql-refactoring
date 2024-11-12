@@ -1,0 +1,1 @@
+In the `scripts` folder, create a `config.py` file by copy-pasting the `config-example.py` file and filling it with your credentials.

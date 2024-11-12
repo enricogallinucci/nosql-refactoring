@@ -63,3 +63,20 @@ from galSpecExtra gse
 join galSpecIndx gsi on gsi.specobjid = gse.specobjid
 join SpecObjAll s on gsi.specobjid = s.specobjid
 join mydb.objid db on db.objid = s.bestobjid
+
+select distinct f.* 
+into mydb.Field
+from PhotoObjAll p
+  join mydb.objid db on db.objid = p.objid
+  join field f on f.fieldid = p.fieldid
+
+select fieldID,zoom,run,rerun,camcol,field,stripe,strip,a,b,c,d,e,f,node,incl,raMin,raMax,decMin,decMax,mu,nu,ra,dec,cx,cy,cz into mydb.Frame
+from (
+  select distinct fr.* 
+  from PhotoObjAll p
+    join mydb.objid db on db.objid = p.objid
+    join field f on f.fieldid = p.fieldid
+    join frame fr on f.fieldid = fr.fieldid
+) as x
+
+select top 10 fr.img into mydb.fullframe from frame fr
