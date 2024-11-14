@@ -1,33 +1,51 @@
 --========================================================= 2023 Original ===============================================================================
-DROP SCHEMA IF EXISTS SDSS2003_aa CASCADE;
-CREATE SCHEMA SDSS2003_aa;
-SET search_path TO SDSS2003_aa, public;
-SET search_path TO SDSS2003, public;
-
+DROP SCHEMA IF EXISTS aa_SDSS2003 CASCADE;
+CREATE SCHEMA aa_SDSS2003;
+SET search_path TO aa_SDSS2003, public;
 SHOW search_path;
 
 DROP TABLE IF EXISTS PhotoObjAll;
-CREATE TABLE PhotoObjAll 
---(	key int8 PRIMARY KEY, value jsonb NOT NULL)
-AS (SELECT * FROM sdss2003.PhotoObjAll)
-;
-	
+CREATE TABLE PhotoObjAll AS (
+	SELECT	p.objid as key,
+    			(to_jsonb(p) - 'objid') AS value 
+  FROM sdss_relational.PhotoObjAll AS p);
+ALTER TABLE PhotoObjAll ADD PRIMARY KEY (key);
+
+DROP INDEX IF EXISTS idx_PhotoObjAll_ra_dec;
+CREATE INDEX idx_PhotoObjAll_ra_dec ON PhotoObjAll(
+  CAST(value->>'ra' AS FLOAT),
+  CAST(value->>'dec' AS FLOAT)
+);
+
 -- Photoz should have a FK to PhotoObjAll correspondin to a 0..1-1 relationship
 DROP TABLE IF EXISTS Photoz;
-CREATE TABLE Photoz 
---(key int8 PRIMARY KEY, value jsonb NOT NULL)
-AS (SELECT * FROM sdss2003.Photoz)
-;
+CREATE TABLE Photoz AS (
+	SELECT p.objid as key,
+    		(to_jsonb(p) - 'objid') AS value
+	FROM sdss_relational.photoz p);
+ALTER TABLE Photoz ADD PRIMARY KEY (key);
+
+DROP INDEX IF EXISTS idx_Photoz_z;
+CREATE INDEX idx_Photoz_z ON Photoz(
+  CAST(value->>'z' AS float)
+);
 
 -- SpecObjAll should have a FK to PhotoObjAll correspondin to a *-1 relationship
 DROP TABLE IF EXISTS SpecObjAll;
-CREATE TABLE SpecObjAll 
---(key int8 PRIMARY KEY, value jsonb NOT NULL)
-AS (SELECT * FROM sdss2003.SpecObjAll)
-;
+CREATE TABLE SpecObjAll AS (
+	SELECT s.specObjID as key,
+    		(to_jsonb(s) - 'specObjID') AS value
+	FROM sdss_relational.SpecObjAll AS s);
+ALTER TABLE SpecObjAll ADD PRIMARY KEY (key);
 
 DROP INDEX IF EXISTS SpecObjAll_bestobjid;
-CREATE INDEX SpecObjAll_bestobjid ON SpecObjAll(((value->>'bestobjid')::int8));
+CREATE INDEX SpecObjAll_bestobjid ON SpecObjAll(
+	CAST(value->>'bestobjid' AS int8));
+DROP INDEX IF EXISTS idx_SpecObjAll_ra_dec;
+CREATE INDEX idx_SpecObjAll_ra_dec ON SpecObjAll(
+  CAST(value->>'ra' AS FLOAT),
+  CAST(value->>'dec' AS FLOAT)
+);
 
 -- (60.30%) select p.objid, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u,p.g,p.r,p.i,p.z, p.err_u, p.err_g, p.err_r,p.err_i,p.err_z from db_2003.photoprimary p where p.objid in ({objidlist}) limit 1
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
