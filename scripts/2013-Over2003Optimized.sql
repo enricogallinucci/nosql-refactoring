@@ -6,33 +6,31 @@ SHOW search_path;
 DROP TABLE IF EXISTS PhotozRF;
 CREATE TABLE PhotozRF AS (
 	SELECT p.objid as key,
-    			(to_jsonb(p) - 'objid') AS value 
+    			(to_jsonb(p.*) - 'objid') AS value 
 	FROM sdss_relational.PhotozRF p
 );
 ALTER TABLE PhotozRF ADD PRIMARY KEY (key);
 
-/*
-DROP TABLE IF EXISTS Frame;
-CREATE TABLE Frame AS (
-	SELECT p.objid as key,
-    			(to_jsonb(f) - 'objid') AS value  
-	FROM sdss_relational.Frame f
-);
-ALTER TABLE Frame ADD PRIMARY KEY (key);
-
 DROP TABLE IF EXISTS Field;
 CREATE TABLE Field AS (
-	SELECT p.objid as key,
-    			(to_jsonb(p) - 'objid') AS value 
+	SELECT f.fieldid as key,
+    			(to_jsonb(f.*) - 'fieldid') AS value 
 	FROM sdss_relational.Field f
 );
 ALTER TABLE Field ADD PRIMARY KEY (key);
-*/
+
+DROP TABLE IF EXISTS Frame;
+CREATE TABLE Frame AS (
+	SELECT f.fieldid as key1, f.zoom AS key2,
+    			(to_jsonb(f.*) - ARRAY['fieldid', 'zoom']) AS value  
+	FROM sdss_relational.Frame f
+);
+ALTER TABLE Frame ADD PRIMARY KEY (key1, key2);
 
 DROP TABLE IF EXISTS GalSpecIndx;
 CREATE TABLE GalSpecIndx AS (
 	SELECT g.specObjID as key,
-    		(to_jsonb(g) - 'specObjID') AS value 
+    		(to_jsonb(g.*) - 'specObjID') AS value 
 	FROM sdss_relational.GalSpecIndx g
 );
 ALTER TABLE GalSpecIndx ADD PRIMARY KEY (key);
@@ -117,19 +115,18 @@ FROM PhotoObjAll_Galaxy g
   JOIN PhotoObjAll_GalaxyComplementary c ON g.key=c.key
 ;
 
-/*
 -- (3.49%)	select * from db_2013.frame where fieldid={fieldid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM Frame
-WHERE key = ???; -- frameid={frameid}
+WHERE key1 = 1237651250943492096 AND key2 = 25; -- frameid={frameid}
 
 -- (2.63%)	select * from db_2013.field where fieldid={fieldid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM Field
-WHERE key = ???; -- fieldid={fieldid}
-*/
+WHERE key = 1237651250943492096; -- fieldid={fieldid}
+
 -- (2.73%)	select * from db_2013.galspecindx where specobjid={specobjid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *

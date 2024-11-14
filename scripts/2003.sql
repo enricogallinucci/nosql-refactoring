@@ -7,7 +7,7 @@ SHOW search_path;
 DROP TABLE IF EXISTS PhotoObjAll;
 CREATE TABLE PhotoObjAll AS (
 	SELECT	p.objid as key,
-    			(to_jsonb(p) - 'objid') AS value 
+    			(to_jsonb(p.*) - 'objid') AS value 
   FROM sdss_relational.PhotoObjAll AS p);
 ALTER TABLE PhotoObjAll ADD PRIMARY KEY (key);
 
@@ -21,7 +21,7 @@ CREATE INDEX idx_PhotoObjAll_ra_dec ON PhotoObjAll(
 DROP TABLE IF EXISTS Photoz;
 CREATE TABLE Photoz AS (
 	SELECT p.objid as key,
-    		(to_jsonb(p) - 'objid') AS value
+    		(to_jsonb(p.*) - 'objid') AS value
 	FROM sdss_relational.photoz p);
 ALTER TABLE Photoz ADD PRIMARY KEY (key);
 
@@ -34,7 +34,7 @@ CREATE INDEX idx_Photoz_z ON Photoz(
 DROP TABLE IF EXISTS SpecObjAll;
 CREATE TABLE SpecObjAll AS (
 	SELECT s.specObjID as key,
-    		(to_jsonb(s) - 'specObjID') AS value
+    		(to_jsonb(s.*) - 'specObjID') AS value
 	FROM sdss_relational.SpecObjAll AS s);
 ALTER TABLE SpecObjAll ADD PRIMARY KEY (key);
 
