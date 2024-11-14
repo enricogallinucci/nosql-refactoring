@@ -39,7 +39,7 @@ CREATE INDEX idx_PhotoObjAll_Primary_ra_dec ON PhotoObjAll_Primary(
 -- This table contains primary objects with unused attributes
 DROP TABLE IF EXISTS PhotoObjAll_PrimaryComplementary;
 CREATE TABLE PhotoObjAll_PrimaryComplementary AS (
-	SELECT key, p.value-ARRAY['run','rerun','camcol','field','obj','ra','dec','u','g','r','i','z','err_u','err_g','err_r','err_i','err_z'] AS value --'type' attribute is in both
+	SELECT key, p.value-ARRAY['run','rerun','camcol','field','obj','ra','dec','u','g','r','i','z','psfmagerr_u','psfmagerr_g','psfmagerr_r','psfmagerr_i','psfmagerr_z'] AS value --'type' attribute is in both
 	FROM aa_SDSS2003.PhotoObjAll p 
 	WHERE (p.value->>'mode')::int4=1
 );
@@ -48,7 +48,7 @@ ALTER TABLE PhotoObjAll_PrimaryComplementary ADD PRIMARY KEY (key);
 -- This table contains galaxies that are not primary objects
 DROP TABLE IF EXISTS PhotoObjAll_Galaxy;
 CREATE TABLE PhotoObjAll_Galaxy AS (
-	SELECT g.key, jsonb_build_object(g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'psfmagerr_u', g.value->>'psfmagerr_g', g.value->>'psfmagerr_r', g.value->>'psfmagerr_i', g.value->>'psfmagerr_z', 
+	SELECT g.key, jsonb_build_object('ra', g.value->>'ra', 'dec', g.value->>'dec', 'u', g.value->>'u', 'g', g.value->>'g', 'r', g.value->>'r', 'i', g.value->>'i', 'z', g.value->>'z', 'psfmagerr_u', g.value->>'psfmagerr_u', 'psfmagerr_g', g.value->>'psfmagerr_g', 'psfmagerr_r', g.value->>'psfmagerr_r', 'psfmagerr_i', g.value->>'psfmagerr_i', 'psfmagerr_z', g.value->>'psfmagerr_z', 
 					'Photoz', jsonb_build_object('pid', p.value->>'pid', 'version', p.value->>'version', 'z', p.value->>'z', 'zerr', p.value->>'zerr', 't', p.value->>'t', 'terr', p.value->>'terr', 'quality', p.value->>'quality'), 
 					'SpecObj', jsonb_build_object('specobjid', s.value->>'specobjid', 'ra', s.value->>'ra', 'dec', s.value->>'dec', 'z', s.value->>'z')) AS value
 	FROM aa_SDSS2003.PhotoObjAll as g 
