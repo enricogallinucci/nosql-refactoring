@@ -7,7 +7,7 @@ DROP TABLE IF EXISTS PhotozRF;
 CREATE TABLE PhotozRF AS (
 	SELECT p.objid as key,
     			(to_jsonb(p.*) - 'objid') AS value 
-	FROM sdss_relational.PhotozRF p
+	FROM sdss_relational2.PhotozRF p
 );
 ALTER TABLE PhotozRF ADD PRIMARY KEY (key);
 
@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS Field;
 CREATE TABLE Field AS (
 	SELECT f.fieldid as key,
     			(to_jsonb(f.*) - 'fieldid') AS value 
-	FROM sdss_relational.Field f
+	FROM sdss_relational2.Field f
 );
 ALTER TABLE Field ADD PRIMARY KEY (key);
 
@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS Frame;
 CREATE TABLE Frame AS (
 	SELECT f.fieldid as key1, f.zoom AS key2,
     			(to_jsonb(f.*) - ARRAY['fieldid', 'zoom']) AS value  
-	FROM sdss_relational.Frame f
+	FROM sdss_relational2.Frame f
 );
 ALTER TABLE Frame ADD PRIMARY KEY (key1, key2);
 
@@ -31,7 +31,7 @@ DROP TABLE IF EXISTS GalSpecIndx;
 CREATE TABLE GalSpecIndx AS (
 	SELECT g.specObjID as key,
     		(to_jsonb(g.*) - 'specObjID') AS value 
-	FROM sdss_relational.GalSpecIndx g
+	FROM sdss_relational2.GalSpecIndx g
 );
 ALTER TABLE GalSpecIndx ADD PRIMARY KEY (key);
 
