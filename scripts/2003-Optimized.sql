@@ -110,8 +110,8 @@ CREATE INDEX idx_Photoz_z ON Photoz(
 -- This table contains the attributes of those Photoz embeded in PhotoObjAll_Galaxy but not projected there
 DROP TABLE IF EXISTS Photoz_Complementary;
 CREATE TABLE Photoz_Complementary AS (
-	SELECT p.key, value-'pid'-'version'-'z'-'zerr'-'t'-'terr'-'quality' AS value
-	FROM SDSS2003.Photoz p
+	SELECT p.key, value-ARRAY['pid','version','z','zerr','t','terr','quality'] AS value
+	FROM aa_SDSS2003.Photoz p
 	WHERE EXISTS (SELECT 'Found' FROM PhotoObjAll_Galaxy g WHERE g.key=p.key)
 );
 ALTER TABLE Photoz_Complementary ADD PRIMARY KEY (key);
