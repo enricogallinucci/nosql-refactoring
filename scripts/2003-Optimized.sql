@@ -24,7 +24,7 @@ CREATE INDEX idx_PhotoObjAll_ra_dec ON PhotoObjAll(
 -- This table contains primary objects
 DROP TABLE IF EXISTS PhotoObjAll_Primary;
 CREATE TABLE PhotoObjAll_Primary AS (
-	SELECT KEY, jsonb_build_object('run', p.value->>'run', 'rerun', p.value->>'rerun', 'camcol', p.value->>'camcol', 'field', p.value->>'field', 'obj', p.value->>'obj', 'type', p.value->>'type', 'ra', p.value->>'ra', 'dec', p.value->>'dec', 'u', p.value->>'u', 'g', p.value->>'g', 'r', p.value->>'r', 'i', p.value->>'i', 'z', p.value->>'z', 'psfmagerr_u', p.value->>'psfmagerr_u', 'psfmagerr_g', p.value->>'psfmagerr_g', 'psfmagerr_r', p.value->>'psfmagerr_r', 'psfmagerr_i', p.value->>'psfmagerr_i', 'psfmagerr_z', p.value->>'psfmagerr_z') AS value 
+	SELECT KEY, jsonb_build_object('run', p.value->>'run', 'rerun', p.value->>'rerun', 'camcol', p.value->>'camcol', 'field', p.value->>'field', 'obj', p.value->>'obj', 'type', p.value->>'type', 'ra', p.value->>'ra', 'dec', p.value->>'dec', 'u', p.value->>'u', 'g', p.value->>'g', 'r', p.value->>'r', 'i', p.value->>'i', 'z', p.value->>'z', 'err_u', p.value->>'err_u', 'err_g', p.value->>'err_g', 'err_r', p.value->>'err_r', 'err_i', p.value->>'err_i', 'err_z', p.value->>'err_z') AS value 
 	FROM aa_SDSS2003.PhotoObjAll p 
 	WHERE (p.value->>'mode')::int4=1
 );
@@ -39,7 +39,7 @@ CREATE INDEX idx_PhotoObjAll_Primary_ra_dec ON PhotoObjAll_Primary(
 -- This table contains primary objects with unused attributes
 DROP TABLE IF EXISTS PhotoObjAll_PrimaryComplementary;
 CREATE TABLE PhotoObjAll_PrimaryComplementary AS (
-	SELECT key, p.value-ARRAY['run','rerun','camcol','field','obj','ra','dec','u','g','r','i','z','psfmagerr_u','psfmagerr_g','psfmagerr_r','psfmagerr_i','psfmagerr_z'] AS value --'type' attribute is in both
+	SELECT key, p.value-ARRAY['run','rerun','camcol','field','obj','ra','dec','u','g','r','i','z','err_u','err_g','err_r','err_i','err_z'] AS value --'type' attribute is in both
 	FROM aa_SDSS2003.PhotoObjAll p 
 	WHERE (p.value->>'mode')::int4=1
 );
@@ -55,7 +55,7 @@ CREATE TABLE PhotoObjAll_Galaxy AS (
 		LEFT OUTER JOIN aa_SDSS2003.SpecObjAll s ON g.key=(s.value->>'bestobjid')::int8
 		JOIN aa_SDSS2003.Photoz as p ON g.key=p.key
 	WHERE (g.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
-	  AND (p.value->>'mode')::int4<>1
+	  AND (g.value->>'mode')::int4<>1
 );
 ALTER TABLE PhotoObjAll_Galaxy ADD PRIMARY KEY (key);
 
@@ -191,7 +191,7 @@ SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.v
 				g.value->'Photoz'->>'pid', g.value->'Photoz'->>'version', g.value->'Photoz'->>'z', g.value->'Photoz'->>'zerr', g.value->'Photoz'->>'t', g.value->'Photoz'->>'terr', g.value->'Photoz'->>'quality', 
 				g.value->'SpecObj'->>'specobjid', g.value->'SpecObj'->>'ra', g.value->'SpecObj'->>'dec', g.value->'SpecObj'->>'z' 
 FROM PhotoObjAll_Galaxy as g 
-WHERE g.key IN (1237648702985142480) --({objidlist})
+WHERE g.key IN (1237645941824356443) --({objidlist})
 	AND (g.value->>'i')::float4 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
 	AND (g.value->>'z')::float4 BETWEEN 0 AND 1.0 --{z1}
 UNION ALL
@@ -201,8 +201,8 @@ SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.v
 					s.value->>'specobjid', s.value->>'ra', s.value->>'dec', s.value->>'z'
 FROM (
 			SELECT  pp.KEY, pp.value||pc.value AS value
-			FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN (1237648702985142480)) pp 
-				JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN (1237648702985142480)) pc ON pp.KEY=pc.KEY
+			FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN (1237645941824356443)) pp --({objidlist})
+				JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN (1237645941824356443)) pc ON pp.KEY=pc.KEY --({objidlist})
 			WHERE (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 			  AND (pp.value->>'i')::float4 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
 			) as g 
@@ -227,12 +227,12 @@ WHERE g.key IN (1237645941824356443) --({objidlist})
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM SpecObjAll s1
-WHERE s1.key = 77628570523926528
+WHERE s1.key = 308580719209244670 --{specobjid}
 UNION ALL
 SELECT s2.key, s2.value||jsonb_build_object('specobjid',g.value->'SpecObj'->>'specobjid', 'ra', g.value->'SpecObj'->>'ra', 'dec', g.value->'SpecObj'->>'dec', 'z', g.value->'SpecObj'->>'z')
 FROM SpecObjAll_Complementary s2
   JOIN PhotoObjAll_Galaxy g ON g.key=s2.KEY
-WHERE s2.key = 77628570523926528;
+WHERE s2.key = 308580719209244670; --{specobjid}
 
 
 

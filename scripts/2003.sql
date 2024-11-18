@@ -62,9 +62,9 @@ WHERE (p.value->>'mode')::int=1 AND p.key IN (1237645941824356443); --({objidlis
 
 -- (04.75%) select g.objid,g.ra,g.dec, g.u,g.g,g.r,g.i,g.z, g.psfmagerr_u as u_err, g.psfmagerr_g as g_err, g.psfmagerr_r as r_err, g.psfmagerr_i as i_err, g.psfmagerr_z as z_err, p.pid,p.version,p.z,p.zerr,p.t,p.terr,p.quality, s.specobjid,s.ra,s.dec,s.z from db_2003.galaxy as g left outer join db_2003.specobjall s on g.objid=s.bestobjid, db_2003.photoz as p where g.objid in ({objidlist}) and g.objid=p.objid and g.i between 15 and 21 and p.z > {z1}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'psfmagerr_u' as u_err, g.value->>'psfmagerr_g' as g_err, g.value->>'psfmagerr_r' as r_err, g.value->>'psfmagerr_i' as i_err, g.value->>'psfmagerr_z' as z_err, 
-				p.value->>'pid', p.value->>'version', p.value->>'z', p.value->>'zerr', p.value->>'t', p.value->>'terr', p.value->>'quality', 
-				s.value->>'specobjid', s.value->>'ra', s.value->>'dec', s.value->>'z' 
+SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i' AS i, g.value->>'z', g.value->>'psfmagerr_u' as u_err, g.value->>'psfmagerr_g' as g_err, g.value->>'psfmagerr_r' as r_err, g.value->>'psfmagerr_i' as i_err, g.value->>'psfmagerr_z' as z_err, 
+				p.value->>'pid', p.value->>'version', p.value->>'z' AS pz, p.value->>'zerr', p.value->>'t', p.value->>'terr', p.value->>'quality', 
+				s.value->>'specobjid', s.value->>'ra', s.value->>'dec', s.value->>'z' AS sz
 FROM PhotoObjAll as g 
 	LEFT OUTER JOIN SpecObjAll s ON g.key=(s.value->>'bestobjid')::int8
 	JOIN Photoz as p ON g.key=p.key
@@ -81,13 +81,13 @@ SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.v
 FROM PhotoObjAll as g  
 	LEFT OUTER JOIN SpecObjAll s ON g.key=(s.value->>'bestobjid')::int8
 	JOIN Photoz as p ON g.key=p.key 
-WHERE g.key IN (1237648702985142480) --({objidlist}) 
+WHERE g.key IN (1237645941824356443) --({objidlist}) 
 	AND (g.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 	AND (g.value->>'i')::float4 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
-	AND (p.value->>'z')::float4 BETWEEN 0 AND 1.0; --{z1} and {z2}
+	AND (p.value->>'z')::float4 BETWEEN 0 AND 1; --{z1} and {z2}
 
 -- (01.09%) select * from db_2003.specobjall where specobjid = {specobjid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-SELECT s.value 
+SELECT s.key, s.value 
 FROM SpecObjAll s 
-WHERE s.key = 77628570523926528; --{specobjid}
+WHERE s.key = 308580719209244670; --{specobjid}
