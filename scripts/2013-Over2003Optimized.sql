@@ -53,7 +53,7 @@ LIMIT 50000;
 -- (14.13%)	select g.objid, pz.z, pz.zerr, pzr.z, pzr.zerr, poa.u, poa.err_u, poa.g, poa.err_g, poa.r, poa.err_r, poa.i, poa.err_i, poa.z, poa.err_z from db_2013.galaxy as g join db_2013.photoz as pz on g.objid = pz.objid join db_2013.photozrf as pzr on g.objid = pzr.objid join db_2013.photoobjall as poa on g.objid = poa.objid where g.objid in ({objidlist}) and (g.flags & 262144) = 0
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 -- Galaxies that are NOT primary objects
-SELECT g.key, 
+SELECT g.key,
 				g.value->'Photoz'->>'z', g.value->'Photoz'->>'zerr', 
 				pzr.value->>'z', pzr.value->>'zerr', 
 				g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
@@ -61,19 +61,19 @@ SELECT g.key,
 FROM PhotoObjAll_Galaxy as g 
 	JOIN PhotozRF pzr ON pzr.key=g.KEY
 	JOIN PhotoObjAll_GalaxyComplementary gc ON gc.key=g.key
-WHERE g.key IN (1237645941824356443) --({objidlist})
+WHERE g.key IN (1237674649922306099) --({objidlist})
 	AND ((g.value->>'flags')::int8 & 262144) = 0
 UNION ALL
 -- Galaxies that are primary objects
-SELECT g.key, 
+SELECT g.key,
 				p.value->>'z', p.value->>'zerr', 
 				pzr.value->>'z', pzr.value->>'zerr', 
 				g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
 				g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
 FROM (
 			SELECT  pp.KEY, pp.value||pc.value AS value
-			FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN (1237645941824356443)) pp 
-				JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN (1237645941824356443)) pc ON pp.KEY=pc.KEY
+			FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN (1237674649922306099)) pp  --({objidlist})
+				JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN (1237674649922306099)) pc ON pp.KEY=pc.KEY  --({objidlist})
 			WHERE (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 			) as g 
 	JOIN Photoz as p ON g.key=p.key
@@ -85,34 +85,39 @@ WHERE ((g.value->>'flags')::int8 & 262144) = 0
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM SpecObjAll s1
-WHERE s1.key = 77628570523926528
+WHERE s1.key = 308567250191804420 -- {specobjid}
 UNION ALL
 SELECT s2.key, s2.value||jsonb_build_object('specobjid',g.value->'SpecObj'->>'specobjid', 'ra', g.value->'SpecObj'->>'ra', 'dec', g.value->'SpecObj'->>'dec', 'z', g.value->'SpecObj'->>'z')
 FROM SpecObjAll_Complementary s2
   JOIN PhotoObjAll_Galaxy g ON g.key=s2.KEY
-WHERE s2.key = 77628570523926528;
+WHERE s2.key = 308567250191804420; -- {specobjid}
 
 -- (4.68%)	select * from db_2013.photoz where objid={objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value 
 FROM Photoz p
+WHERE p.key = 1237645941824356443 -- {objid}
 UNION ALL
 SELECT g.key, g.value->'Photoz'||c.value
 FROM PhotoObjAll_Galaxy g
-  JOIN Photoz_Complementary c ON g.key=c.key;
+  JOIN Photoz_Complementary c ON g.key=c.key
+WHERE g.key = 1237645941824356443; -- {objid}
 
 -- (10.78%)	select * from db_2013.photoobjall where objid= {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value 
 FROM PhotoObjAll p
+WHERE p.key = 1237656511207048216 -- {objid}
 UNION ALL
 SELECT p.key, p.value||c.value 
 FROM PhotoObjAll_Primary p
   JOIN PhotoObjAll_PrimaryComplementary c ON p.key=c.key
+WHERE p.key = 1237656511207048216 -- {objid}
 UNION ALL
 SELECT g.key, g.value-ARRAY['Photoz','SpecObj']||c.value
 FROM PhotoObjAll_Galaxy g
   JOIN PhotoObjAll_GalaxyComplementary c ON g.key=c.key
+WHERE g.key = 1237656511207048216 -- {objid}
 ;
 
 -- (3.49%)	select * from db_2013.frame where fieldid={fieldid}

@@ -1,7 +1,7 @@
 --========================================================= 2023 Optimized ===============================================================================
-DROP SCHEMA IF EXISTS aa_SDSS2013 CASCADE;
-CREATE SCHEMA aa_SDSS2013;
-SET search_path TO aa_SDSS2013, public;
+DROP SCHEMA IF EXISTS aa_SDSS2013_optimized CASCADE;
+CREATE SCHEMA aa_SDSS2013_optimized;
+SET search_path TO aa_SDSS2013_optimized, public;
 SHOW search_path;
 
 -- This table contains all galaxies
