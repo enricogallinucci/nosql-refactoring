@@ -45,10 +45,32 @@ WHERE pz > 0 AND pz < 1 -- pz1.z < {z2} AND pz1.z > {z1}
 
 -- (0.0767)	select s.specobjid, s.ra, s.dec from db_2023.specobj as s where s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
+SELECT key, value->>'ra', value->>'dec' 
+FROM (
+	SELECT sc.key, sc.value||(g.value->'SpecObj')::jsonb AS value
+	FROM SpecObjAll_Complementary sc 
+	  JOIN PhotoObjAll_Galaxy g ON g.KEY=(sc.value->>'bestobjid')::int8
+	UNION ALL
+	SELECT s.KEY, s.value
+	FROM SpecObjAll s
+	) _
+WHERE (value->>'ra')::float8 BETWEEN 100 AND 200 --{ra1} and {ra2} 
+	AND (value->>'dec')::float8 BETWEEN -1 AND 1; -- {dec1} and {dec2}
 
 -- (0.0142)	select * from db_2023.photoz where objid = {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
+SELECT key, value 
+FROM (
+	SELECT pc.key, pc.value||(g.value->'Photoz')::jsonb AS value
+	FROM Photoz_Complementary pc 
+	  JOIN PhotoObjAll_Galaxy g ON g.key=pc.key
+	UNION ALL
+	SELECT p.KEY, p.value
+	FROM Photoz p
+	) _
+WHERE key=1237661064950973129; -- {objid}
 
+	
 -- (0.2185)	select * from db_2023.photoobjall where objid = {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 

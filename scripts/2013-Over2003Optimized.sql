@@ -98,7 +98,7 @@ SELECT p.key, p.value
 FROM Photoz p
 WHERE p.key = 1237645941824356443 -- {objid}
 UNION ALL
-SELECT g.key, g.value->'Photoz'||c.value
+SELECT g.key, (g.value->'Photoz')::jsonb||c.value
 FROM PhotoObjAll_Galaxy g
   JOIN Photoz_Complementary c ON g.key=c.key
 WHERE g.key = 1237645941824356443; -- {objid}
@@ -114,7 +114,7 @@ FROM PhotoObjAll_Primary p
   JOIN PhotoObjAll_PrimaryComplementary c ON p.key=c.key
 WHERE p.key = 1237656511207048216 -- {objid}
 UNION ALL
-SELECT g.key, g.value-ARRAY['Photoz','SpecObj']||c.value
+SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])||c.value
 FROM PhotoObjAll_Galaxy g
   JOIN PhotoObjAll_GalaxyComplementary c ON g.key=c.key
 WHERE g.key = 1237656511207048216 -- {objid}

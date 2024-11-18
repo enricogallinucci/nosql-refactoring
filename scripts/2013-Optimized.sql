@@ -77,7 +77,7 @@ WHERE (pp.value->>'type')::int4 <> 3 --OR (pc.value->>'type')::int4<>3 --class='
 	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE pp.key=pzr.key)
 UNION ALL
 -- This takes all galaxies in 2003 optimized except those already included in PhotoObjAll_Galaxy
-SELECT g.key, g.value-ARRAY['Photoz','SpecObj']||c.value
+SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||c.value
 FROM aa_SDSS2003_optimized.PhotoObjAll_Galaxy g
   JOIN aa_SDSS2003_optimized.PhotoObjAll_GalaxyComplementary c ON g.key=c.KEY
 WHERE ((g.value->>'flags')::int8 & 262144) <> 0
@@ -92,7 +92,7 @@ CREATE TABLE SpecObjAll AS (
 	SELECT *
 	FROM aa_SDSS2003_optimized.SpecObjAll s
 	UNION ALL
-	SELECT c.KEY, c.value||g.value->'SpecObj'
+	SELECT c.KEY, c.value||(g.value->'SpecObj')::jsonb
 	FROM aa_SDSS2003_optimized.SpecObjAll_Complementary c
 	  JOIN aa_SDSS2003_optimized.PhotoObjAll_Galaxy g ON g.key=(c.value->>'bestobjid')::int8
 );
@@ -106,7 +106,7 @@ CREATE TABLE Photoz AS (
 	  SELECT *
 	  FROM aa_SDSS2003_optimized.Photoz p
 	  UNION ALL
-		SELECT c.key, c.value||g.value->'Photoz' AS value
+		SELECT c.key, c.value||(g.value->'Photoz')::jsonb AS value
 		FROM aa_SDSS2003_optimized.Photoz_Complementary c
 			JOIN aa_SDSS2003_optimized.PhotoObjAll_Galaxy g ON g.key=c.key
 		) p
@@ -122,7 +122,7 @@ CREATE TABLE Photoz_Complementary AS (
 	  SELECT *
 	  FROM aa_SDSS2003_optimized.Photoz p
 	  UNION ALL
-		SELECT c.key, c.value||g.value->'Photoz' AS value
+		SELECT c.key, c.value||(g.value->'Photoz')::jsonb AS value
 		FROM aa_SDSS2003_optimized.Photoz_Complementary c
 			JOIN aa_SDSS2003_optimized.PhotoObjAll_Galaxy g ON g.key=c.key
 		) p
@@ -219,7 +219,7 @@ EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value 
 FROM Photoz p
 UNION ALL
-SELECT g.key, g.value->'Photoz'||c.value
+SELECT g.key, (g.value->'Photoz')::jsonb||c.value
 FROM PhotoObjAll_Galaxy g
   JOIN Photoz_Complementary c ON g.key=c.key;
 
@@ -228,7 +228,7 @@ EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value 
 FROM PhotoObjAll p
 UNION ALL
-SELECT g.key, g.value-ARRAY['Photoz','PhotozRF']||c.value
+SELECT g.key, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||c.value
 FROM PhotoObjAll_Galaxy g
   JOIN PhotoObjAll_GalaxyComplementary c ON g.key=c.key;
 
