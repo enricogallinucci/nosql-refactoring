@@ -65,6 +65,8 @@ CREATE INDEX idx_PhotoObjAll_Galaxy_ra_dec ON PhotoObjAll_Galaxy(
   CAST(value->>'dec' AS FLOAT)
 );
 
+
+
 -- This table contains the missing attributes of galaxies
 DROP TABLE IF EXISTS PhotoObjAll_GalaxyComplementary;
 CREATE TABLE PhotoObjAll_GalaxyComplementary AS (
@@ -72,7 +74,7 @@ CREATE TABLE PhotoObjAll_GalaxyComplementary AS (
 	FROM aa_SDSS2003.PhotoObjAll as g 
 	WHERE (g.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp) 
 		AND (g.value->>'mode')::int4<>1
-		AND EXISTS (SELECT 'Found' FROM SDSS2003.Photoz as p WHERE g.key=p.key)
+		AND EXISTS (SELECT 'Found' FROM aa_SDSS2003.Photoz as p WHERE g.key=p.key)
 );
 ALTER TABLE PhotoObjAll_GalaxyComplementary ADD PRIMARY KEY (key);
 
@@ -83,7 +85,7 @@ CREATE TABLE PhotoObjAll_Other AS (
   FROM aa_SDSS2003.PhotoObjAll g 
 	WHERE (g.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp) 
 		AND (g.value->>'mode')::int4<>1
-		AND NOT EXISTS (SELECT 'Found' FROM SDSS2003.Photoz as p WHERE g.key=p.key)
+		AND NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003.Photoz as p WHERE g.key=p.key)
 );
 ALTER TABLE PhotoObjAll_Other ADD PRIMARY KEY (key);
 
