@@ -106,7 +106,7 @@ WHERE g.key = 1237645941824356443; -- {objid}
 -- (10.78%)	select * from db_2013.photoobjall where objid= {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value 
-FROM PhotoObjAll p
+FROM PhotoObjAll_Other p
 WHERE p.key = 1237656511207048216 -- {objid}
 UNION ALL
 SELECT p.key, p.value||c.value 

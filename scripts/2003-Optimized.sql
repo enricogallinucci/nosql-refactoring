@@ -5,22 +5,6 @@ SET search_path TO aa_SDSS2003_optimized, public;
 SHOW search_path;
 
 --*********************************************************** Tables *************************************************************************
--- This table contains those object not primary and not galaxy
-DROP TABLE IF EXISTS PhotoObjAll;
-CREATE TABLE PhotoObjAll AS (
-	SELECT * 
-	FROM aa_SDSS2003.PhotoObjAll p 
-	WHERE (p.value->>'mode')::int<>1 
-		AND (p.value->>'type')::int4<>3 --class<>'GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
-);
-ALTER TABLE PhotoObjAll ADD PRIMARY KEY (key);
-
-DROP INDEX IF EXISTS idx_PhotoObjAll_ra_dec;
-CREATE INDEX idx_PhotoObjAll_ra_dec ON PhotoObjAll(
-  CAST(value->>'ra' AS FLOAT),
-  CAST(value->>'dec' AS FLOAT)
-);
-
 -- This table contains primary objects
 DROP TABLE IF EXISTS PhotoObjAll_Primary;
 CREATE TABLE PhotoObjAll_Primary AS (
@@ -76,14 +60,15 @@ CREATE TABLE PhotoObjAll_GalaxyComplementary AS (
 );
 ALTER TABLE PhotoObjAll_GalaxyComplementary ADD PRIMARY KEY (key);
 
--- This table contains photoobjects of class galaxy that are not in Photoz
+-- This table contains those PhotoObject not in primary and not in galaxy
 DROP TABLE IF EXISTS PhotoObjAll_Other;
 CREATE TABLE PhotoObjAll_Other AS (
   SELECT *
-  FROM aa_SDSS2003.PhotoObjAll g 
-	WHERE (g.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp) 
-		AND (g.value->>'mode')::int4<>1
-		AND NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003.Photoz as p WHERE g.key=p.key)
+  FROM aa_SDSS2003.PhotoObjAll p 
+	WHERE (p.value->>'mode')::int<>1
+	  AND ((p.value->>'type')::int4<>3 --class<>'GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+	    OR ((p.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp) 
+				AND NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003.Photoz as pz WHERE pz.key=p.key)))
 );
 ALTER TABLE PhotoObjAll_Other ADD PRIMARY KEY (key);
 

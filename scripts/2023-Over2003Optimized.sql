@@ -73,19 +73,76 @@ WHERE key=1237661064950973129; -- {objid}
 	
 -- (0.2185)	select * from db_2023.photoobjall where objid = {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
+SELECT *
+FROM (
+	SELECT *
+	FROM PhotoObjAll
+	UNION ALL
+	SELECT p.key, p.value||pc.value AS value
+	FROM PhotoObjAll_Primary p
+	  JOIN PhotoObjAll_PrimaryComplementary pc ON p.key=pc.key
+	UNION ALL
+	SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value AS value
+	FROM PhotoObjAll_Galaxy g
+	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key
+	) _
+WHERE key=1237648705671266616; --{objid}
 
 -- (0.1616)	select u, g, r, i, z, objID, type from db_2023.photoobjall where objid = {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
+SELECT key, value->>'u', value->>'g', value->>'r', value->>'i', value->>'z', value->>'type'
+FROM (
+	SELECT *
+	FROM PhotoObjAll
+	UNION ALL
+	SELECT p.key, p.value||pc.value AS value
+	FROM PhotoObjAll_Primary p
+	  JOIN PhotoObjAll_PrimaryComplementary pc ON p.key=pc.key
+	UNION ALL
+	SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value AS value
+	FROM PhotoObjAll_Galaxy g
+	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key
+	) _
+WHERE key=1237648705671266616; --{objid}
 
 -- (0.0453)	select p.ra, p.dec, p.clean, p.u, p.g, p.r, p.i, p.z from db_2023.photoobjall p where ((p.ra between {ra1} and {ra2}) and (p.dec between {dec1} and {dec2}))
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
+SELECT value->>'u', value->>'g', value->>'r', value->>'i', value->>'z', value->>'ra', value->>'dec', value->>'clean'
+FROM (
+	SELECT *
+	FROM PhotoObjAll
+	UNION ALL
+	SELECT p.KEY, p.value||pc.value AS value
+	FROM PhotoObjAll_Primary p
+	  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+	UNION ALL
+	SELECT g.KEY, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value AS value
+	FROM PhotoObjAll_Galaxy g
+	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
+	) _
+WHERE ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
+  AND ((value->>'dec')::float8 BETWEEN 15 AND 20);  -- (p.dec between {dec1} and {dec2}))
 
+-- Next corresponds to two queries with very similar pattern
 -- (0.076)	select p.objid, p.ra, p.dec, p.run, p.rerun, p.camcol, p.field, p.flags, p.psffwhm_z, p.psffwhm_i, p.psffwhm_r, p.psffwhm_g, p.psffwhm_u, p.expab_z, p.expab_i, p.expab_r, p.expab_g, p.expab_u, p.expphi_z, p.expphi_i, p.expphi_r, p.expphi_g, p.expphi_u, p.exprad_z, p.exprad_i, p.exprad_r, p.exprad_g, p.exprad_u, p.expflux_z, p.expflux_i, p.expflux_r, p.expflux_g, p.expflux_u, p.expmag_z, p.expmag_i, p.expmag_r, p.expmag_g, p.expmag_u, p.petrorad_z, p.petrorad_i, p.petrorad_r, p.petrorad_g, p.petrorad_u, p.petroflux_z, p.petroflux_i, p.petroflux_r, p.petroflux_g, p.petroflux_u, p.petromag_z, p.petromag_i, p.petromag_r, p.petromag_g, p.petromag_u, p.petromagerr_z, p.petromagerr_i, p.petromagerr_r, p.petromagerr_g, p.petromagerr_u, p.petror50_z, p.petror50_i, p.petror50_r, p.petror50_g, p.petror50_u, p.petror90_z, p.petror90_i, p.petror90_r, p.petror90_g, p.petror90_u, p.rowc_z, p.rowc_i, p.rowc_r, p.rowc_g, p.rowc_u, p.colc_z, p.colc_i, p.colc_r, p.colc_g, p.colc_u, p.rowcerr_z, p.rowcerr_i, p.rowcerr_r, p.rowcerr_g, p.rowcerr_u, p.colcerr_z, p.colcerr_i, p.colcerr_r, p.colcerr_g, p.colcerr_u, p.flags_z, p.flags_i, p.flags_r, p.flags_g, p.flags_u  from db_2023.photoobj as p where p.objid in ({objid})
-EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-
 -- (0.006)	select specobjid,ra,dec,u,g,r,i,z,type,devab_u,devab_g,devab_r,devab_i,devab_z,expab_u,expab_g,expab_r,expab_i,expab_z, lnlstar_u,lnlstar_g,lnlstar_r,lnlstar_i,lnlstar_z,lnldev_u,lnldev_g,lnldev_r,lnldev_i,lnldev_z,lnlexp_u,lnlexp_g,lnlexp_r, lnlexp_i,lnlexp_z,me2_u,me2_g,me2_r,me2_i,me2_z,me1_u,me1_g,me1_r,me1_i,me1_z,mrrcc_u,mrrcc_g,mrrcc_r,mrrcc_i,mrrcc_z,mcr4_u, mcr4_g,mcr4_r,mcr4_i,mcr4_z,fibermag_u,fibermag_g,fibermag_r,fibermag_i,fibermag_z,modelmag_u,modelmag_g,modelmag_r,modelmag_i, modelmag_z,petromag_u,petromag_g,petromag_r,petromag_i,petromag_z,petror50_u,petror50_g,petror50_r,petror50_i,petror50_z,petror90_u, petror90_g,petror90_r,petror90_i,petror90_z from db_2023.photoobj where objid = {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-
+SELECT key, value
+FROM (
+	SELECT *
+	FROM PhotoObjAll
+	UNION ALL
+	SELECT p.KEY, p.value||pc.value AS value
+	FROM PhotoObjAll_Primary p
+	  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+	UNION ALL
+	SELECT g.KEY, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value AS value
+	FROM PhotoObjAll_Galaxy g
+	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
+	) _
+WHERE (value->>'mode')::int4=1 OR (value->>'mode')::int4=2 -- primary and secondary objects (i.e., those in PhotoObj view, according to catalog)
+	AND key IN (1237648705671266616);  -- p.objid in ({objid})
+  
 -- (0.0061)	select distinct p.ra, p.dec, p.objid, p.run, p.rerun, p.camcol, p.field, s.z, s.plate, s.mjd, s.fiberid, s.specobjid, s.run2d from db_2023.photoobjall as p join db_2023.specobjall s on p.objid = s.bestobjid where ((p.ra between {ra1} and {ra2}) and (p.dec between {dec1} and {dec2}))
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 

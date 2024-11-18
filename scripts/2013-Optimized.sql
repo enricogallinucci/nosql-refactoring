@@ -63,9 +63,9 @@ ALTER TABLE PhotoObjAll_GalaxyComplementary ADD PRIMARY KEY (key);
 -- This table contains all photoobjects, except galaxies in PhotoObjAll_Galaxy
 DROP TABLE IF EXISTS PhotoObjAll;
 CREATE TABLE PhotoObjAll AS (
--- This takes all PhotoObjAll in 2003 optimized
+-- This takes all PhotoObjAll_Other in 2003 optimized
 SELECT p.key, p.value 
-FROM aa_SDSS2003_optimized.PhotoObjAll p
+FROM aa_SDSS2003_optimized.PhotoObjAll_Other p
 UNION ALL
 -- This takes all primary objects in 2003 optimized except those already included in PhotoObjAll_Galaxy
 SELECT pp.key, pp.value||pc.value 
