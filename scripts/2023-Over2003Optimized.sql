@@ -3,6 +3,13 @@ SET search_path TO aa_SDSS2003_optimized, public;
 SHOW search_path;
 
 --********************************************************* New tables *********************************************************************
+DROP TABLE IF EXISTS Platex;
+CREATE TABLE Platex AS (
+	SELECT p.plateid as key,
+    			(to_jsonb(p.*) - 'plateid') AS value 
+	FROM sdss_relational2.Platex p
+);
+ALTER TABLE Platex ADD PRIMARY KEY (key);
 
 --*********************************************************** Queries *************************************************************************
 -- (0.0793)	select p.objid, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u, p.g, p.r, p.i, p.z, p.err_u, p.err_g, p.err_r, p.err_i, p.err_z from db_2023.PhotoPrimary p where p.objid in ({objidlist})
@@ -69,14 +76,13 @@ FROM (
 	FROM Photoz p
 	) _
 WHERE key=1237661064950973129; -- {objid}
-
 	
 -- (0.2185)	select * from db_2023.photoobjall where objid = {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM (
 	SELECT *
-	FROM PhotoObjAll
+	FROM PhotoObjAll_Other
 	UNION ALL
 	SELECT p.key, p.value||pc.value AS value
 	FROM PhotoObjAll_Primary p
@@ -93,7 +99,7 @@ EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT key, value->>'u', value->>'g', value->>'r', value->>'i', value->>'z', value->>'type'
 FROM (
 	SELECT *
-	FROM PhotoObjAll
+	FROM PhotoObjAll_Other
 	UNION ALL
 	SELECT p.key, p.value||pc.value AS value
 	FROM PhotoObjAll_Primary p
@@ -110,7 +116,7 @@ EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT value->>'u', value->>'g', value->>'r', value->>'i', value->>'z', value->>'ra', value->>'dec', value->>'clean'
 FROM (
 	SELECT *
-	FROM PhotoObjAll
+	FROM PhotoObjAll_Other
 	UNION ALL
 	SELECT p.KEY, p.value||pc.value AS value
 	FROM PhotoObjAll_Primary p
@@ -130,7 +136,7 @@ EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT key, value
 FROM (
 	SELECT *
-	FROM PhotoObjAll
+	FROM PhotoObjAll_Other
 	UNION ALL
 	SELECT p.KEY, p.value||pc.value AS value
 	FROM PhotoObjAll_Primary p
@@ -145,15 +151,99 @@ WHERE (value->>'mode')::int4=1 OR (value->>'mode')::int4=2 -- primary and second
   
 -- (0.0061)	select distinct p.ra, p.dec, p.objid, p.run, p.rerun, p.camcol, p.field, s.z, s.plate, s.mjd, s.fiberid, s.specobjid, s.run2d from db_2023.photoobjall as p join db_2023.specobjall s on p.objid = s.bestobjid where ((p.ra between {ra1} and {ra2}) and (p.dec between {dec1} and {dec2}))
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-
+SELECT DISTINCT value->>'ra', value->>'dec', key, value->>'run', value->>'rerun', value->>'camcol', value->>'field', value->'SpecObj'->>'z', value->'SpecObj'->>'plate', value->'SpecObj'->>'mjd', value->'SpecObj'->>'fiberid', value->'SpecObj'->>'specobjid', value->'SpecObj'->>'run2d'
+FROM (
+	SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
+	FROM (
+		SELECT *
+		FROM PhotoObjAll_Other
+		UNION ALL
+		SELECT p.KEY, p.value||pc.value AS value
+		FROM PhotoObjAll_Primary p
+		  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+		) p
+		JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
+	UNION ALL
+	SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+	FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
+	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
+	  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
+  ) _
+WHERE ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
+  AND ((value->>'dec')::float8 BETWEEN 15 AND 20);  -- (p.dec between {dec1} and {dec2}))
+	
 -- (0.0055)	select distinct s.run2d, s.plate, s.mjd, s.fiberid from db_2023.photoobjall as p join db_2023.specobjall s on p.objid = s.bestobjid where ((p.ra between {ra1} and {ra2}) and (p.dec between {dec1} and {dec2}))
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
+SELECT DISTINCT value->'SpecObj'->>'run2d', value->'SpecObj'->>'plate', value->'SpecObj'->>'mjd', value->'SpecObj'->>'fiberid'
+FROM (
+	SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
+	FROM (
+		SELECT *
+		FROM PhotoObjAll_Other
+		UNION ALL
+		SELECT p.KEY, p.value||pc.value AS value
+		FROM PhotoObjAll_Primary p
+		  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+		) p
+		JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
+	UNION ALL
+	SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+	FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
+	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
+	  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
+  ) _
+WHERE ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
+  AND ((value->>'dec')::float8 BETWEEN 15 AND 20);  -- (p.dec between {dec1} and {dec2}))
 
 -- (0.0097)	select distinct s.run2d, s.plate, s.mjd, s.fiberid from db_2023.photoobjall as p join db_2023.specobjall s on p.objid = s.bestobjid where (s.plate={plate} and s.mjd={mjd} and s.fiberid={fiberid})
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
+SELECT DISTINCT value->'SpecObj'->>'run2d', value->'SpecObj'->>'plate', value->'SpecObj'->>'mjd', value->'SpecObj'->>'fiberid'
+FROM (
+	SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
+	FROM (
+		SELECT *
+		FROM PhotoObjAll_Other
+		UNION ALL
+		SELECT p.KEY, p.value||pc.value AS value
+		FROM PhotoObjAll_Primary p
+		  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+		) p
+		JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
+	UNION ALL
+	SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+	FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
+	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
+	  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
+  ) _
+WHERE (value->'SpecObj'->>'plate')::int4=422 AND (value->'SpecObj'->>'mjd')::int4=51811 AND (value->'SpecObj'->>'fiberid')::int4=390;  -- (s.plate={plate} and s.mjd={mjd} and s.fiberid={fiberid})
 
 -- (0.0062)	select count(s.bestobjid) as count_returned_spec_phot from db_2023.photoobjall as p join db_2023.specobjall as s on s.bestobjid = p.objid join db_2023.platex as px on px.plateid = s.plateid where s.scienceprimary = 1 and s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
+SELECT count(s.value->'SpecObj'->>'s.bestobjid')
+FROM (
+  SELECT *
+  FROM (
+		SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
+		FROM (
+			SELECT *
+			FROM PhotoObjAll_Other
+			UNION ALL
+			SELECT p.KEY, p.value||pc.value AS value
+			FROM PhotoObjAll_Primary p
+			  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+			) p
+			JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
+		UNION ALL
+		SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+		FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
+		  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
+		  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
+	  ) _
+	WHERE (value->'SpecObj'->>'scienceprimary')::int4=1
+  	AND ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
+  	AND ((value->>'dec')::float8 BETWEEN 15 AND 20)  -- (p.dec between {dec1} and {dec2}))
+  ) s
+  JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plateid')::int8;
 
 -- (0.0061)	select s.instrument, s.bossspecobjid, px.seeing50, p.psffwhm_r, p.field, p.run, p.camcol, p.rowc_r, p.colc_r, p.rowc, p.colc, p.fracdev_r, p.devab_r, p.devphi_r, s.specobjid, s.bestobjid, p.objid, s.plate, s.fiberid, p.insidemask, p.flags, p.sky_r, p.petroflux_r, p.petrofluxivar_r, p.fiber2flux_r, p.petrorad_r, p.petroraderr_r, p.petror50_r, p.petror50err_r, p.petror90_r, p.petror90err_r, p.devrad_r, p.devraderr_r, p.devflux_r, p.devfluxivar_r, p.airmass_r, p.cloudcam_r, p.calibstatus_r, s.z, s.zerr, s.zwarning, s.class, s.z_noqso, s.zerr_noqso, s.zwarning_noqso, s.veldisp, s.veldisperr, s.veldispz, s.veldispzerr, s.veldispchi2, s.veldispnpix, s.veldispdof, s.snmedian_r, s.snmedian, s.chi68p, s.fracnsigma_1, s.fracnsighi_1, s.fracnsiglo_1, s.spectroflux_r, s.spectrosynflux_r, s.spectrofluxivar_r, s.spectrosynfluxivar_r, p.expflux_r, p.expab_r, p.exprad_r, p.expphi_r, p.psfflux_r from db_2023.photoobjall as p join db_2023.specobjall as s on s.bestobjid = p.objid join db_2023.platex as px on px.plateid = s.plateid where s.scienceprimary = 1 and s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2} limit 1
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
