@@ -65,8 +65,6 @@ CREATE INDEX idx_PhotoObjAll_Galaxy_ra_dec ON PhotoObjAll_Galaxy(
   CAST(value->>'dec' AS FLOAT)
 );
 
-
-
 -- This table contains the missing attributes of galaxies
 DROP TABLE IF EXISTS PhotoObjAll_GalaxyComplementary;
 CREATE TABLE PhotoObjAll_GalaxyComplementary AS (
