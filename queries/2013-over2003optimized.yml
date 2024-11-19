@@ -1,0 +1,107 @@
+-
+  weight: 0.1066
+  query: |
+    SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+    FROM PhotoObjAll_Primary p 
+    WHERE p.key IN ({objidlist})
+    LIMIT 1
+  params: objidlist
+-
+  weight: 0.0133
+  query: |
+    SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+    FROM PhotoObjAll_Primary p 
+    WHERE p.key IN ({objidlist})
+    LIMIT 50000
+  params: objidlist
+-
+  weight: 0.1413
+  query: |
+    SELECT g.key,
+          g.value->'Photoz'->>'z', g.value->'Photoz'->>'zerr', 
+          pzr.value->>'z', pzr.value->>'zerr', 
+          g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
+          gc.value->>'err_u', gc.value->>'err_g', gc.value->>'err_r', gc.value->>'err_i', gc.value->>'err_z' 
+    FROM PhotoObjAll_Galaxy as g 
+      JOIN PhotozRF pzr ON pzr.key=g.KEY
+      JOIN PhotoObjAll_GalaxyComplementary gc ON gc.key=g.key
+    WHERE g.key IN ({objidlist})
+      AND ((g.value->>'flags')::int8 & 262144) = 0
+    UNION ALL
+    SELECT g.key,
+            p.value->>'z', p.value->>'zerr', 
+            pzr.value->>'z', pzr.value->>'zerr', 
+            g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
+            g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
+    FROM (
+          SELECT  pp.KEY, pp.value||pc.value AS value
+          FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN ({objidlist})) pp
+            JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN ({objidlist})) pc ON pp.KEY=pc.KEY  
+          WHERE (pp.value->>'type')::int4=3 
+          ) as g 
+      JOIN Photoz as p ON g.key=p.key
+      JOIN PhotozRF pzr ON pzr.key=g.KEY
+    WHERE ((g.value->>'flags')::int8 & 262144) = 0
+  params: objidlist
+-
+  weight: 0.0547
+  query: |
+    SELECT *
+    FROM SpecObjAll s1
+    WHERE s1.key = {specobjid} 
+    UNION ALL
+    SELECT s2.key, s2.value||jsonb_build_object('specobjid',g.value->'SpecObj'->>'specobjid', 'ra', g.value->'SpecObj'->>'ra', 'dec', g.value->'SpecObj'->>'dec', 'z', g.value->'SpecObj'->>'z')
+    FROM SpecObjAll_Complementary s2
+      JOIN PhotoObjAll_Galaxy g ON g.key=s2.KEY
+    WHERE s2.key = {specobjid}
+  params: specobjid
+-
+  weight: 0.0468
+  query: |
+    SELECT p.key, p.value 
+    FROM Photoz p
+    WHERE p.key = {objid}
+    UNION ALL
+    SELECT g.key, (g.value->'Photoz')::jsonb||c.value
+    FROM PhotoObjAll_Galaxy g
+      JOIN Photoz_Complementary c ON g.key=c.key
+    WHERE g.key = {objid}
+  params: objid
+-
+  weight: 0.1078
+  query: |
+    SELECT p.key, p.value 
+    FROM PhotoObjAll_Other p
+    WHERE p.key = {objid}
+    UNION ALL
+    SELECT p.key, p.value||c.value 
+    FROM PhotoObjAll_Primary p
+      JOIN PhotoObjAll_PrimaryComplementary c ON p.key=c.key
+    WHERE p.key = {objid}
+    UNION ALL
+    SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])||c.value
+    FROM PhotoObjAll_Galaxy g
+      JOIN PhotoObjAll_GalaxyComplementary c ON g.key=c.key
+    WHERE g.key = {objid} 
+  params: objid
+-
+  weight: 0.0349
+  query: |
+    SELECT *
+    FROM Frame
+    WHERE key1 = {fieldid} AND key2 = 25
+  params: fieldid
+-
+  weight: 0.0263
+  query: |
+    SELECT *
+    FROM Field
+    WHERE key = {fieldid}
+  params: fieldid
+-
+  weight: 0.0273
+  query: |
+    SELECT *
+    FROM GalSpecIndx
+    WHERE key = {specobjid}
+  params: specobjid

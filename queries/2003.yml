@@ -1,0 +1,34 @@
+-
+  weight: 0.6030
+  query: |
+    SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+    FROM PhotoObjAll p 
+    WHERE (p.value->>'mode')::int=1 AND p.key IN ({objidlist})
+    LIMIT 1
+  params: objidlist
+-
+  weight: 0.2246
+  query: |
+    SELECT p.value->>'run', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'g', p.value->>'r', p.value->>'err_g', p.value->>'err_r' 
+    FROM PhotoObjAll p 
+    WHERE (p.value->>'mode')::int=1 AND p.key IN ({objidlist})
+  params: objidlist
+-
+  weight: 0.0475
+  query: |
+    SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i' AS i, g.value->>'z', g.value->>'psfmagerr_u' as u_err, g.value->>'psfmagerr_g' as g_err, g.value->>'psfmagerr_r' as r_err, g.value->>'psfmagerr_i' as i_err, g.value->>'psfmagerr_z' as z_err, p.value->>'pid', p.value->>'version', p.value->>'z' AS pz, p.value->>'zerr', p.value->>'t', p.value->>'terr', p.value->>'quality', s.value->>'specobjid', s.value->>'ra', s.value->>'dec', s.value->>'z' AS sz 
+    FROM PhotoObjAll as g LEFT OUTER JOIN SpecObjAll s ON g.key=(s.value->>'bestobjid')::int8 JOIN Photoz as p ON g.key=p.key 
+    WHERE g.key IN ({objidlist}) AND (g.value->>'type')::int4=3 AND (g.value->>'i')::float4 BETWEEN 14.0 AND 21.0 AND (p.value->>'z')::float4 > {z1}
+  params: objidlist,z1
+-
+  weight: 0.1140
+  query: |
+    SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'psfmagerr_u' as u_err, g.value->>'psfmagerr_g' as g_err, g.value->>'psfmagerr_r' as r_err, g.value->>'psfmagerr_i' as i_err, g.value->>'psfmagerr_z' as z_err, p.value->>'pid', p.value->>'version', p.value->>'z', p.value->>'zerr', p.value->>'t', p.value->>'terr', p.value->>'quality', s.value->>'specobjid', s.value->>'ra', s.value->>'dec', s.value->>'z' 
+    FROM PhotoObjAll as g LEFT OUTER JOIN SpecObjAll s ON g.key=(s.value->>'bestobjid')::int8 JOIN Photoz as p ON g.key=p.key 
+    WHERE g.key IN ({objidlist}) AND (g.value->>'type')::int4=3 AND (g.value->>'i')::float4 BETWEEN 14.0 AND 21.0 AND (p.value->>'z')::float4 BETWEEN {z1} AND {z2}
+  params: objidlist,z
+-
+  weight: 0.0109
+  query: |
+    SELECT s.value FROM SpecObjAll s WHERE s.key = {specobjid}
+  params: specobjid
