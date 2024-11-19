@@ -32,8 +32,8 @@ CREATE INDEX idx_Photoz_z ON Photoz(
   CAST(value->>'z' AS FLOAT)
 );
 
-DROP INDEX IF EXISTS idx_PhotoObjAll_PrimaryComplementary_dredr;
-CREATE INDEX idx_PhotoObjAll_PrimaryComplementary_dredr ON PhotoObjAll_PrimaryComplementary(
+DROP INDEX IF EXISTS idx_PhotoObjAll_PrimaryComplementary_deredr;
+CREATE INDEX idx_PhotoObjAll_PrimaryComplementary_deredr ON PhotoObjAll_PrimaryComplementary(
   CAST(value->>'dered_r' AS FLOAT)
 );
 
@@ -54,15 +54,15 @@ LIMIT 1;
 
 -- (0.0903)	SELECT TO_CHAR(p.ra, 'FM999999990.00000000') AS ra, TO_CHAR(p.dec, 'FM999999990.00000000') AS dec, p.dered_r, COALESCE(TO_CHAR(s.z, 'FM9990.0000'), '-9999') AS z, COALESCE(TO_CHAR(pz1.z, 'FM9990.0000'), '-9999') AS pzz1 FROM db_2023.galaxy AS p LEFT OUTER JOIN db_2023.specobj AS s ON s.bestobjid = p.objid LEFT OUTER JOIN db_2023.photoz AS pz1 ON pz1.objid = p.objid WHERE p.dered_r < {dered_r2} AND p.dered_r > {dered_r1} AND pz1.z < {z2} AND pz1.z > {z1} AND p.objid IN ({objidlist})
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-SELECT ra, dec, dred_r, sz, pz
+SELECT ra, dec, dered_r, sz, pz
 FROM (
-	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (gc.value->>'dered_r')::float4 AS dred_r, g.value->'SpecObj'->>'z' AS sz, (g.value->'Photoz'->>'z')::float4 AS pz
+	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (gc.value->>'dered_r')::float4 AS dered_r, g.value->'SpecObj'->>'z' AS sz, (g.value->'Photoz'->>'z')::float4 AS pz
 	FROM PhotoObjAll_Galaxy as g 
 	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key 
 	WHERE g.key IN (1237645941824356443) --({objidlist})
 	UNION ALL
 	-- Galaxies that are primary objects
-	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (g.value->>'dered_r')::float4 AS dred_r, s.value->>'z' AS sz, (p.value->>'z')::float4 AS pz
+	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (g.value->>'dered_r')::float4 AS dered_r, s.value->>'z' AS sz, (p.value->>'z')::float4 AS pz
 	FROM (
 				SELECT  pp.KEY, pp.value||pc.value AS value
 				FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN (1237645941824356443)) pp 
@@ -74,7 +74,7 @@ FROM (
 		LEFT OUTER JOIN Photoz as p ON g.key=p.KEY
 	) _
 WHERE pz > 0 AND pz < 1 -- pz1.z < {z2} AND pz1.z > {z1}
-	AND dred_r > 0 AND dred_r < 100 -- p.dered_r < {dered_r2} AND p.dered_r > {dered_r1}
+	AND dered_r > 0 AND dered_r < 100 -- p.dered_r < {dered_r2} AND p.dered_r > {dered_r1}
 ;
 
 -- (0.0767)	select s.specobjid, s.ra, s.dec from db_2023.specobj as s where s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2}
