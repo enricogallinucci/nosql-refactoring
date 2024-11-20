@@ -10,6 +10,7 @@ CREATE TABLE Platex AS (
 	FROM sdss_relational2.Platex p
 );
 ALTER TABLE Platex ADD PRIMARY KEY (key);
+ANALYZE Platex;
 
 DROP TABLE IF EXISTS GalSpecExtra;
 CREATE TABLE GalSpecExtra AS (
@@ -18,6 +19,7 @@ CREATE TABLE GalSpecExtra AS (
 	FROM sdss_relational2.GalSpecExtra g
 );
 ALTER TABLE GalSpecExtra ADD PRIMARY KEY (key);
+ANALYZE GalSpecExtra;
 
 DROP TABLE IF EXISTS GalSpecIndx;
 CREATE TABLE GalSpecIndx AS (
@@ -26,16 +28,19 @@ CREATE TABLE GalSpecIndx AS (
 	FROM sdss_relational2.GalSpecIndx g
 );
 ALTER TABLE GalSpecIndx ADD PRIMARY KEY (key);
+ANALYZE GalSpecIndx;
 
 DROP INDEX IF EXISTS idx_Photoz_z;
 CREATE INDEX idx_Photoz_z ON Photoz(
   CAST(value->>'z' AS FLOAT)
 );
+ANALYZE Photoz;
 
 DROP INDEX IF EXISTS idx_PhotoObjAll_PrimaryComplementary_deredr;
 CREATE INDEX idx_PhotoObjAll_PrimaryComplementary_deredr ON PhotoObjAll_PrimaryComplementary(
   CAST(value->>'dered_r' AS FLOAT)
 );
+ANALYZE PhotoObjAll_PrimaryComplementary;
 
 
 --*********************************************************** Queries *************************************************************************
@@ -112,9 +117,8 @@ FROM (
 	SELECT *
 	FROM PhotoObjAll_Other
 	UNION ALL
-	SELECT p.key, p.value||pc.value AS value
+	SELECT p.key, p.value
 	FROM PhotoObjAll_Primary p
-	  JOIN PhotoObjAll_PrimaryComplementary pc ON p.key=pc.key
 	UNION ALL
 	SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value AS value
 	FROM PhotoObjAll_Galaxy g
@@ -157,7 +161,7 @@ FROM (
 	FROM PhotoObjAll_Galaxy g
 	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) _
-WHERE (value->>'mode')::int4=1 OR (value->>'mode')::int4=2 -- primary and secondary objects (i.e., those in PhotoObj view, according to catalog)
+WHERE (value->>'mode')::int4 IN (1,2) -- primary and secondary objects (i.e., those in PhotoObj view, according to catalog)
 	AND key IN (1237648705671266616);  -- p.objid in ({objid})
   
 -- (0.0061)	select distinct p.ra, p.dec, p.objid, p.run, p.rerun, p.camcol, p.field, s.z, s.plate, s.mjd, s.fiberid, s.specobjid, s.run2d from db_2023.photoobjall as p join db_2023.specobjall s on p.objid = s.bestobjid where ((p.ra between {ra1} and {ra2}) and (p.dec between {dec1} and {dec2}))
@@ -169,15 +173,13 @@ FROM (
 		SELECT *
 		FROM PhotoObjAll_Other
 		UNION ALL
-		SELECT p.KEY, p.value||pc.value AS value
+		SELECT p.KEY, p.value
 		FROM PhotoObjAll_Primary p
-		  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 		) p
 		JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
 	UNION ALL
-	SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+	SELECT g.KEY, (g.value-'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
 	FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
   ) _
 WHERE ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
@@ -192,15 +194,13 @@ FROM (
 		SELECT *
 		FROM PhotoObjAll_Other
 		UNION ALL
-		SELECT p.KEY, p.value||pc.value AS value
+		SELECT p.KEY, p.value 
 		FROM PhotoObjAll_Primary p
-		  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 		) p
 		JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
 	UNION ALL
-	SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+	SELECT g.KEY, (g.value->'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
 	FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
   ) _
 WHERE ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
@@ -215,15 +215,13 @@ FROM (
 		SELECT *
 		FROM PhotoObjAll_Other
 		UNION ALL
-		SELECT p.KEY, p.value||pc.value AS value
+		SELECT p.KEY, p.value AS value
 		FROM PhotoObjAll_Primary p
-		  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 		) p
 		JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
 	UNION ALL
-	SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+	SELECT g.KEY, (g.value-'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
 	FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
   ) _
 WHERE (value->'SpecObj'->>'plate')::int4=422 AND (value->'SpecObj'->>'mjd')::int4=51811 AND (value->'SpecObj'->>'fiberid')::int4=390;  -- (s.plate={plate} and s.mjd={mjd} and s.fiberid={fiberid})
@@ -240,15 +238,13 @@ FROM (
 			SELECT *
 			FROM PhotoObjAll_Other
 			UNION ALL
-			SELECT p.KEY, p.value||pc.value AS value
+			SELECT p.KEY, p.value
 			FROM PhotoObjAll_Primary p
-			  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 			) p
 			JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
 		UNION ALL
-		SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+		SELECT g.KEY, (g.value-'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
 		FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
-		  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 		  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
 	  ) _
 	WHERE (value->'SpecObj'->>'scienceprimary')::int4=1
@@ -268,15 +264,13 @@ FROM (
 			SELECT *
 			FROM PhotoObjAll_Other
 			UNION ALL
-			SELECT p.KEY, p.value||pc.value AS value
+			SELECT p.KEY, p.value AS value
 			FROM PhotoObjAll_Primary p
-			  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 			) p
 			JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
 		UNION ALL
-		SELECT g.KEY, (g.value-'Photoz')::jsonb||gc.value||jsonb_build_object('SpecObj',sc.value) AS value
+		SELECT g.KEY, (g.value-'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
 		FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
-		  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 		  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
 	  ) _
 	WHERE (value->'SpecObj'->>'scienceprimary')::int4=1
