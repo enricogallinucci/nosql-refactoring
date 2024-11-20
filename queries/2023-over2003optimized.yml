@@ -66,12 +66,9 @@
       ) _
     WHERE key={objid}
   params: objid
-# -
-#   weight: 0.2185
-#   query: |
-#   params: 
+# Next one is another that summarizes two queries
 -
-  weight: 0.1616
+  weight: 0.3801
   query: |
     SELECT key, value->>'u', value->>'g', value->>'r', value->>'i', value->>'z', value->>'type'
     FROM (
@@ -96,7 +93,7 @@
       FROM PhotoObjAll_Other
       UNION ALL
       SELECT p.KEY, p.value||pc.value AS value
-  FROM PhotoObjAll_Primary p
+    FROM PhotoObjAll_Primary p
         JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
       UNION ALL
       SELECT g.KEY, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value AS value
@@ -108,7 +105,7 @@
   params: ra_p,dec_p
 # Next corresponds to two queries with very similar pattern
 -
-  weight: 0.0766
+  weight: 0.0820
   query: |
     SELECT key, value
     FROM (

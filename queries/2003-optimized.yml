@@ -30,7 +30,7 @@
     FROM (
           SELECT  pp.KEY, pp.value
           FROM PhotoObjAll_Primary pp 
-          WHERE pp.key IN ({objidlist}))
+          WHERE pp.key IN ({objidlist})
             AND (pp.value->>'type')::int4=3
             AND (pp.value->>'i')::float4 BETWEEN 15.0 AND 21.0
           ) as g 
@@ -55,7 +55,7 @@
     FROM (
           SELECT  pp.KEY, pp.value
           FROM PhotoObjAll_Primary pp 
-          WHERE pp.key IN ({objidlist}))
+          WHERE pp.key IN ({objidlist})
             AND (pp.value->>'type')::int4=3
             AND (pp.value->>'i')::float4 BETWEEN 15.0 AND 21.0
           ) as g 
