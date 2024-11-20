@@ -10,6 +10,7 @@ CREATE TABLE PhotozRF AS (
 	FROM sdss_relational2.PhotozRF p
 );
 ALTER TABLE PhotozRF ADD PRIMARY KEY (key);
+ANALYZE PhotozRF;
 
 DROP TABLE IF EXISTS Field;
 CREATE TABLE Field AS (
@@ -18,6 +19,7 @@ CREATE TABLE Field AS (
 	FROM sdss_relational2.Field f
 );
 ALTER TABLE Field ADD PRIMARY KEY (key);
+ANALYZE Field;
 
 DROP TABLE IF EXISTS Frame;
 CREATE TABLE Frame AS (
@@ -26,6 +28,7 @@ CREATE TABLE Frame AS (
 	FROM sdss_relational2.Frame f
 );
 ALTER TABLE Frame ADD PRIMARY KEY (key1, key2);
+ANALYZE Frame;
 
 DROP TABLE IF EXISTS GalSpecIndx;
 CREATE TABLE GalSpecIndx AS (
@@ -34,6 +37,7 @@ CREATE TABLE GalSpecIndx AS (
 	FROM sdss_relational2.GalSpecIndx g
 );
 ALTER TABLE GalSpecIndx ADD PRIMARY KEY (key);
+ANALYZE GalSpecIndx;
 
 --*********************************************************** Queries *************************************************************************
 -- (10.66%)	SELECT p.objId, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u, p.g, p.r, p.i, p.z, p.Err_u, p.Err_g, p.Err_r, p.Err_i, p.Err_z FROM db_2013.PhotoPrimary p WHERE p.objID in ({objidlist}) LIMIT 1;
@@ -71,10 +75,10 @@ SELECT g.key,
 				g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
 				g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
 FROM (
-			SELECT  pp.KEY, pp.value||pc.value AS value
-			FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN (1237674649922306099)) pp  --({objidlist})
-				JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN (1237674649922306099)) pc ON pp.KEY=pc.KEY  --({objidlist})
-			WHERE (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+			SELECT  pp.KEY, pp.value
+			FROM PhotoObjAll_Primary pp  --({objidlist})
+			WHERE key IN (1237674649922306099)
+			  AND (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 			) as g 
 	JOIN Photoz as p ON g.key=p.key
 	JOIN PhotozRF pzr ON pzr.key=g.KEY

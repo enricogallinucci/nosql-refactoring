@@ -34,10 +34,10 @@
             g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
             g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
     FROM (
-          SELECT  pp.KEY, pp.value||pc.value AS value
-          FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN ({objidlist})) pp
-            JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN ({objidlist})) pc ON pp.KEY=pc.KEY  
-          WHERE (pp.value->>'type')::int4=3 
+          SELECT  pp.KEY, pp.value
+          FROM PhotoObjAll_Primary pp
+          WHERE key IN ({objidlist})
+            AND (pp.value->>'type')::int4=3 
           ) as g 
       JOIN Photoz as p ON g.key=p.key
       JOIN PhotozRF pzr ON pzr.key=g.KEY
@@ -71,7 +71,7 @@
   weight: 0.1078
   query: |
     SELECT p.key, p.value 
-    FROM PhotoObjAll_Other p
+  FROM PhotoObjAll_Other p
     WHERE p.key = {objid}
     UNION ALL
     SELECT p.key, p.value||c.value 
