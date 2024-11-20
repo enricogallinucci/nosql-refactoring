@@ -228,7 +228,7 @@ FROM (
   ) _
 WHERE (value->'SpecObj'->>'plate')::int4=422 AND (value->'SpecObj'->>'mjd')::int4=51811 AND (value->'SpecObj'->>'fiberid')::int4=390;  -- (s.plate={plate} and s.mjd={mjd} and s.fiberid={fiberid})
 
-/*
+
 -- (0.0062)	select count(s.bestobjid) as count_returned_spec_phot from db_2023.photoobjall as p join db_2023.specobjall as s on s.bestobjid = p.objid join db_2023.platex as px on px.plateid = s.plateid where s.scienceprimary = 1 and s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT count(s.value->'SpecObj'->>'s.bestobjid')
@@ -255,7 +255,6 @@ FROM (
   	AND ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
   	AND ((value->>'dec')::float8 BETWEEN 15 AND 20)  -- (p.dec between {dec1} and {dec2}))
   ) s
--- THIS JOIN HERE NEEDS TO BE FIXED!!!
   JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plateid')::int8;
 
 -- (0.0061)	select s.instrument, s.bossspecobjid, px.seeing50, p.psffwhm_r, p.field, p.run, p.camcol, p.rowc_r, p.colc_r, p.rowc, p.colc, p.fracdev_r, p.devab_r, p.devphi_r, s.specobjid, s.bestobjid, p.objid, s.plate, s.fiberid, p.insidemask, p.flags, p.sky_r, p.petroflux_r, p.petrofluxivar_r, p.fiber2flux_r, p.petrorad_r, p.petroraderr_r, p.petror50_r, p.petror50err_r, p.petror90_r, p.petror90err_r, p.devrad_r, p.devraderr_r, p.devflux_r, p.devfluxivar_r, p.airmass_r, p.cloudcam_r, p.calibstatus_r, s.z, s.zerr, s.zwarning, s.class, s.z_noqso, s.zerr_noqso, s.zwarning_noqso, s.veldisp, s.veldisperr, s.veldispz, s.veldispzerr, s.veldispchi2, s.veldispnpix, s.veldispdof, s.snmedian_r, s.snmedian, s.chi68p, s.fracnsigma_1, s.fracnsighi_1, s.fracnsiglo_1, s.spectroflux_r, s.spectrosynflux_r, s.spectrofluxivar_r, s.spectrosynfluxivar_r, p.expflux_r, p.expab_r, p.exprad_r, p.expphi_r, p.psfflux_r from db_2023.photoobjall as p join db_2023.specobjall as s on s.bestobjid = p.objid join db_2023.platex as px on px.plateid = s.plateid where s.scienceprimary = 1 and s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2} limit 1
@@ -284,10 +283,9 @@ FROM (
   	AND ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
   	AND ((value->>'dec')::float8 BETWEEN 15 AND 20)  -- (p.dec between {dec1} and {dec2}))
   ) s
--- THIS JOIN HERE NEEDS TO BE FIXED!!!
   JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plateid')::int8
 LIMIT 1;
-*/
+
 
 -- (0.0162)	select r.run, r.rerun, r.camcol, r.field, f.fieldid, r.stripe, r.strip, r.ra, r.dec, r.ramin, r.ramax, r.decmin, r.decmax, r.mu, r.nu, r.incl, r.node, r.a, r.b, r.c, r.d, r.e, r.f, f.quality, f.a_u, f.b_u, f.c_u, f.d_u, f.e_u, f.f_u, f.a_g, f.b_g, f.c_g, f.d_g, f.e_g, f.f_g, f.a_r, f.b_r, f.c_r, f.d_r, f.e_r, f.f_r, f.a_i, f.b_i, f.c_i, f.d_i, f.e_i, f.f_i, f.a_z, f.b_z, f.c_z, f.d_z, f.e_z, f.f_z, f.fieldid from db_2023.frame r, db_2023.field f where f.fieldid=r.fieldid and r.fieldid in ({fieldidlist}) and r.zoom=0
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)

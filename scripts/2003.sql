@@ -16,6 +16,7 @@ CREATE INDEX idx_PhotoObjAll_ra_dec ON PhotoObjAll(
   CAST(value->>'ra' AS FLOAT),
   CAST(value->>'dec' AS FLOAT)
 );
+ANALYZE PhotoObjAll;
 
 -- Photoz should have a FK to PhotoObjAll correspondin to a 0..1-1 relationship
 DROP TABLE IF EXISTS Photoz;
@@ -29,6 +30,7 @@ DROP INDEX IF EXISTS idx_Photoz_z;
 CREATE INDEX idx_Photoz_z ON Photoz(
   CAST(value->>'z' AS float)
 );
+ANALYZE Photoz;
 
 -- SpecObjAll should have a FK to PhotoObjAll correspondin to a *-1 relationship
 DROP TABLE IF EXISTS SpecObjAll;
@@ -46,6 +48,7 @@ CREATE INDEX idx_SpecObjAll_ra_dec ON SpecObjAll(
   CAST(value->>'ra' AS FLOAT),
   CAST(value->>'dec' AS FLOAT)
 );
+ANALYZE SpecObjAll;
 
 -- (60.30%) select p.objid, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u,p.g,p.r,p.i,p.z, p.err_u, p.err_g, p.err_r,p.err_i,p.err_z from db_2003.photoprimary p where p.objid in ({objidlist}) limit 1
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
