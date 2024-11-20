@@ -71,7 +71,7 @@
   weight: 0.1078
   query: |
     SELECT p.key, p.value 
-  FROM PhotoObjAll_Other p
+    FROM PhotoObjAll_Other p
     WHERE p.key = {objid}
     UNION ALL
     SELECT p.key, p.value||c.value 

@@ -96,7 +96,7 @@
       FROM PhotoObjAll_Other
       UNION ALL
       SELECT p.KEY, p.value||pc.value AS value
-  FROM PhotoObjAll_Primary p
+    FROM PhotoObjAll_Primary p
         JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
       UNION ALL
       SELECT g.KEY, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value AS value
