@@ -35,6 +35,7 @@ FROM (
 WHERE ((g.value->>'flags')::int8 & 262144) = 0
 );
 ALTER TABLE PhotoObjAll_Galaxy ADD PRIMARY KEY (key);
+ANALYZE PhotoObjAll_Galaxy;
 
 -- This table contains all complementary attributes of galaxies
 -- Galaxies that are NOT primary objects in 2003 optimized
@@ -59,6 +60,7 @@ WHERE ((g.value->>'flags')::int8 & 262144) = 0
 	AND EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE g.key=pzr.key)
 );
 ALTER TABLE PhotoObjAll_GalaxyComplementary ADD PRIMARY KEY (key);
+ANALYZE PhotoObjAll_GalaxyComplementary;
 
 -- This table contains all photoobjects, except galaxies in PhotoObjAll_Galaxy
 DROP TABLE IF EXISTS PhotoObjAll;
@@ -85,6 +87,7 @@ WHERE ((g.value->>'flags')::int8 & 262144) <> 0
 	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE g.key=pzr.key)
 );
 ALTER TABLE PhotoObjAll ADD PRIMARY KEY (key);
+ANALYZE PhotoObjAll;
 
 -- This table contains SpecObjAll that are not embeded in PhotoObjAll_Galaxy
 DROP TABLE IF EXISTS SpecObjAll;
@@ -97,6 +100,7 @@ CREATE TABLE SpecObjAll AS (
 	  JOIN aa_SDSS2003_optimized.PhotoObjAll_Galaxy g ON g.key=(c.value->>'bestobjid')::int8
 );
 ALTER TABLE SpecObjAll ADD PRIMARY KEY (key);
+ANALYZE SpecObjAll;
 
 -- This table contains Photoz that are not embeded in PhotoObjAll_Galaxy
 DROP TABLE IF EXISTS Photoz;
@@ -113,6 +117,7 @@ CREATE TABLE Photoz AS (
 	WHERE NOT EXISTS (SELECT 'Found' FROM PhotoObjAll_Galaxy g WHERE g.key=p.key )
 );
 ALTER TABLE Photoz ADD PRIMARY KEY (key);
+ANALYZE Photoz;
 
 -- This table contains the attributes of those Photoz embeded in PhotoObjAll_Galaxy but not projected there
 DROP TABLE IF EXISTS Photoz_Complementary;
@@ -129,6 +134,7 @@ CREATE TABLE Photoz_Complementary AS (
 	WHERE EXISTS (SELECT 'Found' FROM PhotoObjAll_Galaxy g WHERE g.key=p.key)
 );
 ALTER TABLE Photoz_Complementary ADD PRIMARY KEY (key);
+ANALYZE Photoz_Complementary;
 
 --********************************************************* New tables *********************************************************************
 -- This table contains PhotozRF that are not embeded in PhotoObjAll_Galaxy
