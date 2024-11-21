@@ -93,7 +93,7 @@ WHERE s1.key = 308567250191804420 -- {specobjid}
 UNION ALL
 SELECT s2.key, s2.value||jsonb_build_object('specobjid',g.value->'SpecObj'->>'specobjid', 'ra', g.value->'SpecObj'->>'ra', 'dec', g.value->'SpecObj'->>'dec', 'z', g.value->'SpecObj'->>'z')
 FROM SpecObjAll_Complementary s2
-  JOIN PhotoObjAll_Galaxy g ON g.key=s2.KEY
+  JOIN PhotoObjAll_Galaxy g ON g.key=(s2.value->>'bestobjid')::int8
 WHERE s2.key = 308567250191804420; -- {specobjid}
 
 -- (4.68%)	select * from db_2013.photoz where objid={objid}
