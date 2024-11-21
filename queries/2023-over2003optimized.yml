@@ -18,17 +18,17 @@
   query: |
     SELECT ra, dec, dered_r, sz, pz
     FROM (
-      SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (gc.value->>'dered_r')::float4 AS dered_r, g.value->'SpecObj'->>'z' AS sz, (g.value->'Photoz'->>'z')::float4 AS pz
+      SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (gc.value->>'dered_r')::float8 AS dered_r, g.value->'SpecObj'->>'z' AS sz, (g.value->'Photoz'->>'z')::float8 AS pz
       FROM PhotoObjAll_Galaxy as g 
         JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key 
       WHERE g.key IN ({objidlist})
       UNION ALL
-      SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (g.value->>'dered_r')::float4 AS dered_r, s.value->>'z' AS sz, (p.value->>'z')::float4 AS pz
+      SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (g.value->>'dered_r')::float8 AS dered_r, s.value->>'z' AS sz, (p.value->>'z')::float8 AS pz
       FROM (
             SELECT  pp.KEY, pp.value||pc.value AS value
             FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN ({objidlist})) pp 
               JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN ({objidlist})) pc ON pp.KEY=pc.KEY
-            WHERE (pp.value->>'type')::int4=3
+            WHERE (pp.value->>'type')::int8=3
               AND pp.key IN ({objidlist})
             ) as g 
         LEFT OUTER JOIN SpecObjAll s ON g.KEY=(s.value->>'bestobjid')::int8
@@ -120,7 +120,7 @@
       FROM PhotoObjAll_Galaxy g
         JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
       ) _
-    WHERE (value->>'mode')::int4 in (1,2)
+    WHERE (value->>'mode')::int8 in (1,2)
       AND key IN ({objid})
   params: objid
 -
@@ -186,7 +186,7 @@
       FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
         JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
       ) _
-    WHERE (value->'SpecObj'->>'plate')::int4={plate} AND (value->'SpecObj'->>'mjd')::int4={mjd} AND (value->'SpecObj'->>'fiberid')::int4={fiberid}
+    WHERE (value->'SpecObj'->>'plate')::int8={plate} AND (value->'SpecObj'->>'mjd')::int8={mjd} AND (value->'SpecObj'->>'fiberid')::int8={fiberid}
   params: plate-mjd-fiberid
 -
   weight: 0.0062
@@ -209,7 +209,7 @@
         FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
           JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
         ) _
-      WHERE (value->'SpecObj'->>'scienceprimary')::int4=1
+      WHERE (value->'SpecObj'->>'scienceprimary')::int8=1
         AND ((value->>'ra')::float8 BETWEEN {ra1} and {ra2}) 
         AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
       ) s
@@ -236,7 +236,7 @@
         FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
           JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
         ) _
-      WHERE (value->'SpecObj'->>'scienceprimary')::int4=1
+      WHERE (value->'SpecObj'->>'scienceprimary')::int8=1
         AND ((value->>'ra')::float8 BETWEEN {ra1} and {ra2}) 
         AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
       ) s

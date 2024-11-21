@@ -37,7 +37,7 @@
           SELECT  pp.KEY, pp.value
           FROM PhotoObjAll_Primary pp
           WHERE key IN ({objidlist})
-            AND (pp.value->>'type')::int4=3 
+            AND (pp.value->>'type')::int8=3 
           ) as g 
       JOIN Photoz as p ON g.key=p.key
       JOIN PhotozRF pzr ON pzr.key=g.KEY
