@@ -1,4 +1,4 @@
---========================================================= 2023 Optimized ===============================================================================
+--========================================================= 2023 over 2003 Optimized ===============================================================================
 SET search_path TO aa_SDSS2003_optimized, public;
 SHOW search_path;
 
@@ -72,7 +72,7 @@ FROM (
 				SELECT  pp.KEY, pp.value||pc.value AS value
 				FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN (1237645941824356443)) pp 
 					JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN (1237645941824356443)) pc ON pp.KEY=pc.KEY
-				WHERE (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+				WHERE (pp.value->>'type')::int8=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 					AND pp.key IN (1237645941824356443) --({objidlist})
 				) as g 
 		LEFT OUTER JOIN SpecObjAll s ON g.KEY=(s.value->>'bestobjid')::int8
@@ -161,7 +161,7 @@ FROM (
 	FROM PhotoObjAll_Galaxy g
 	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) _
-WHERE (value->>'mode')::int4 IN (1,2) -- primary and secondary objects (i.e., those in PhotoObj view, according to catalog)
+WHERE (value->>'mode')::int8 IN (1,2) -- primary and secondary objects (i.e., those in PhotoObj view, according to catalog)
 	AND key IN (1237648705671266616);  -- p.objid in ({objid})
   
 -- (0.0061)	select distinct p.ra, p.dec, p.objid, p.run, p.rerun, p.camcol, p.field, s.z, s.plate, s.mjd, s.fiberid, s.specobjid, s.run2d from db_2023.photoobjall as p join db_2023.specobjall s on p.objid = s.bestobjid where ((p.ra between {ra1} and {ra2}) and (p.dec between {dec1} and {dec2}))

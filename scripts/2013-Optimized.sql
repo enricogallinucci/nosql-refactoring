@@ -1,4 +1,4 @@
---========================================================= 2023 Optimized ===============================================================================
+--========================================================= 2013 Optimized ===============================================================================
 DROP SCHEMA IF EXISTS aa_SDSS2013_optimized CASCADE;
 CREATE SCHEMA aa_SDSS2013_optimized;
 SET search_path TO aa_SDSS2013_optimized, public;
@@ -28,7 +28,7 @@ FROM (
 			SELECT  pp.KEY, pp.value||pc.value AS value
 			FROM (SELECT * FROM aa_SDSS2003_optimized.PhotoObjAll_Primary) pp 
 				JOIN (SELECT * FROM aa_SDSS2003_optimized.PhotoObjAll_PrimaryComplementary) pc ON pp.KEY=pc.KEY
-			WHERE (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+			WHERE (pp.value->>'type')::int8=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 			) as g 
 	JOIN aa_SDSS2003_optimized.Photoz as p ON g.key=p.key
 	JOIN aa_SDSS2003_optimized.PhotozRF pzr ON pzr.key=g.KEY
@@ -53,7 +53,7 @@ FROM (
 			SELECT  pp.KEY, pp.value||pc.value AS value
 			FROM (SELECT * FROM aa_SDSS2003_optimized.PhotoObjAll_Primary) pp 
 				JOIN (SELECT * FROM aa_SDSS2003_optimized.PhotoObjAll_PrimaryComplementary) pc ON pp.KEY=pc.KEY
-			WHERE (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+			WHERE (pp.value->>'type')::int8=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 			) as g 
 WHERE ((g.value->>'flags')::int8 & 262144) = 0
 	AND EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.Photoz as p WHERE g.key=p.key)
@@ -63,31 +63,46 @@ ALTER TABLE PhotoObjAll_GalaxyComplementary ADD PRIMARY KEY (key);
 ANALYZE PhotoObjAll_GalaxyComplementary;
 
 -- This table contains all photoobjects, except galaxies in PhotoObjAll_Galaxy
-DROP TABLE IF EXISTS PhotoObjAll;
-CREATE TABLE PhotoObjAll AS (
+DROP TABLE IF EXISTS PhotoObjAll_Primary;
+CREATE TABLE PhotoObjAll_Primary AS (
+-- This takes all primary objects in 2003 optimized except those already included in PhotoObjAll_Galaxy
+SELECT pp.key, pp.value||pc.value AS value
+FROM aa_SDSS2003_optimized.PhotoObjAll_Primary pp
+  JOIN aa_SDSS2003_optimized.PhotoObjAll_PrimaryComplementary pc ON pp.key=pc.KEY
+WHERE (pp.value->>'type')::int8 <> 3 --OR (pc.value->>'type')::int4<>3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+  OR ((pc.value->>'flags')::int8 & 262144) <> 0
+	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.Photoz as p WHERE pp.key=p.key)
+	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE pp.key=pzr.key)
+);
+ALTER TABLE PhotoObjAll_Primary ADD PRIMARY KEY (key);
+ANALYZE PhotoObjAll_Primary;
+
+-- This table contains all photoobjects, except galaxies in PhotoObjAll_Galaxy
+DROP TABLE IF EXISTS PhotoObjAll_Other;
+CREATE TABLE PhotoObjAll_Other AS (
 -- This takes all PhotoObjAll_Other in 2003 optimized
 SELECT p.key, p.value 
 FROM aa_SDSS2003_optimized.PhotoObjAll_Other p
 UNION ALL
 -- This takes all primary objects in 2003 optimized except those already included in PhotoObjAll_Galaxy
-SELECT pp.key, pp.value||pc.value 
+SELECT pp.key, pp.value||pc.value AS value
 FROM aa_SDSS2003_optimized.PhotoObjAll_Primary pp
   JOIN aa_SDSS2003_optimized.PhotoObjAll_PrimaryComplementary pc ON pp.key=pc.KEY
-WHERE (pp.value->>'type')::int4 <> 3 --OR (pc.value->>'type')::int4<>3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
-  OR ((pp.value->>'flags')::int8 & 262144) <> 0
+WHERE (pp.value->>'type')::int8 <> 3 --OR (pc.value->>'type')::int4<>3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+  OR ((pc.value->>'flags')::int8 & 262144) <> 0
 	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.Photoz as p WHERE pp.key=p.key)
 	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE pp.key=pzr.key)
 UNION ALL
 -- This takes all galaxies in 2003 optimized except those already included in PhotoObjAll_Galaxy
-SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||c.value
+SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value
 FROM aa_SDSS2003_optimized.PhotoObjAll_Galaxy g
-  JOIN aa_SDSS2003_optimized.PhotoObjAll_GalaxyComplementary c ON g.key=c.KEY
-WHERE ((g.value->>'flags')::int8 & 262144) <> 0
+  JOIN aa_SDSS2003_optimized.PhotoObjAll_GalaxyComplementary gc ON g.key=gc.KEY
+WHERE (((gc.value->>'flags')::int8 & 262144) <> 0
 	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.Photoz as p WHERE g.key=p.key)
-	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE g.key=pzr.key)
+	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE g.key=pzr.key))
 );
-ALTER TABLE PhotoObjAll ADD PRIMARY KEY (key);
-ANALYZE PhotoObjAll;
+ALTER TABLE PhotoObjAll_Other ADD PRIMARY KEY (key);
+ANALYZE PhotoObjAll_Other;
 
 -- This table contains SpecObjAll that are not embeded in PhotoObjAll_Galaxy
 DROP TABLE IF EXISTS SpecObjAll;
@@ -186,27 +201,25 @@ ANALYZE GalSpecIndx;
 -- (10.66%)	SELECT p.objId, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u, p.g, p.r, p.i, p.z, p.Err_u, p.Err_g, p.Err_r, p.Err_i, p.Err_z FROM db_2013.PhotoPrimary p WHERE p.objID in ({objidlist}) LIMIT 1;
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-FROM PhotoObjAll p
+FROM PhotoObjAll_Primary p
 WHERE p.key IN (1237645941824356443) --({objidlist})
-  AND (p.value->>'mode')::int4=1
 UNION ALL
 SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
 FROM PhotoObjAll_Galaxy p
 WHERE p.key IN (1237645941824356443) --({objidlist})
-  AND (p.value->>'mode')::int4=1
+  AND (p.value->>'mode')::int8=1
 LIMIT 1;
 
 -- (1.33%)	SELECT p.objid, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u, p.g, p.r, p.i, p.z, p.Err_u, p.Err_g, p.Err_r, p.Err_i, p.Err_z FROM db_2013.photoprimary p WHERE p.objID in ({objidlist}) limit 50000
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-FROM PhotoObjAll p
+FROM PhotoObjAll_Primary p
 WHERE p.key IN (1237645941824356443) --({objidlist})
-  AND (p.value->>'mode')::int4=1
 UNION ALL
 SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
 FROM PhotoObjAll_Galaxy p
 WHERE p.key IN (1237645941824356443) --({objidlist})
-  AND (p.value->>'mode')::int4=1
+  AND (p.value->>'mode')::int8=1
 LIMIT 50000;
 
 -- (14.13%)	select g.objid, pz.z, pz.zerr, pzr.z, pzr.zerr, poa.u, poa.err_u, poa.g, poa.err_g, poa.r, poa.err_r, poa.i, poa.err_i, poa.z, poa.err_z from db_2013.galaxy as g join db_2013.photoz as pz on g.objid = pz.objid join db_2013.photozrf as pzr on g.objid = pzr.objid join db_2013.photoobjall as poa on g.objid = poa.objid where g.objid in ({objidlist}) and (g.flags & 262144) = 0
@@ -224,7 +237,7 @@ WHERE g.key IN (1237645941824356443); --({objidlist})
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM SpecObjAll s1
-WHERE s1.key = 77628570523926528; -- {specobjid}
+WHERE s1.key = 318642625764681730; -- {specobjid}
 
 -- (4.68%)	select * from db_2013.photoz where objid={objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
@@ -241,7 +254,11 @@ WHERE g.key = 1237645941824356443; -- {objid}
 -- (10.78%)	select * from db_2013.photoobjall where objid= {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value 
-FROM PhotoObjAll p
+FROM PhotoObjAll_Other p
+WHERE p.key = 1237656511207048216 -- {objid}
+UNION ALL
+SELECT p.key, p.value 
+FROM PhotoObjAll_Primary p
 WHERE p.key = 1237656511207048216 -- {objid}
 UNION ALL
 SELECT g.key, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||c.value
@@ -254,7 +271,7 @@ WHERE g.key = 1237656511207048216; -- {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM Frame
-WHERE key1 = 1237651250943492096; -- frameid={frameid}
+WHERE key1 = 1237651250943492096; -- frameid={fieldid}
 
 -- (2.63%)	select * from db_2013.field where fieldid={fieldid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
@@ -266,4 +283,4 @@ WHERE key = 1237651250943492096; -- fieldid={fieldid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM GalSpecIndx
-WHERE key = 930106061497591808; -- specobjid={specobjid}
+WHERE key = 299541354021677056; -- specobjid={specobjid}

@@ -1,4 +1,4 @@
---========================================================= 2023 Optimized ===============================================================================
+--========================================================= 2003 Optimized ===============================================================================
 DROP SCHEMA IF EXISTS aa_SDSS2003_optimized CASCADE;
 CREATE SCHEMA aa_SDSS2003_optimized;
 SET search_path TO aa_SDSS2003_optimized, public;
@@ -13,7 +13,7 @@ CREATE TABLE PhotoObjAll_Primary AS (
 																) AS value 
 	
 	FROM aa_SDSS2003.PhotoObjAll p 
-	WHERE (p.value->>'mode')::int4=1
+	WHERE (p.value->>'mode')::int8=1
 );
 ALTER TABLE PhotoObjAll_Primary ADD PRIMARY KEY (key);
 
@@ -29,7 +29,7 @@ DROP TABLE IF EXISTS PhotoObjAll_PrimaryComplementary;
 CREATE TABLE PhotoObjAll_PrimaryComplementary AS (
 	SELECT key, p.value-ARRAY['run','rerun','camcol','field','obj','ra','dec','u','g','r','i','z','err_u','err_g','err_r','err_i','err_z', 'psfmagerr_u', 'psfmagerr_g', 'psfmagerr_r', 'psfmagerr_i', 'psfmagerr_z'] AS value --'type' attribute is in both
 	FROM aa_SDSS2003.PhotoObjAll p 
-	WHERE (p.value->>'mode')::int4=1
+	WHERE (p.value->>'mode')::int8=1
 );
 ALTER TABLE PhotoObjAll_PrimaryComplementary ADD PRIMARY KEY (key);
 ANALYZE PhotoObjAll_PrimaryComplementary;
@@ -43,8 +43,8 @@ CREATE TABLE PhotoObjAll_Galaxy AS (
 	FROM aa_SDSS2003.PhotoObjAll as g 
 		LEFT OUTER JOIN aa_SDSS2003.SpecObjAll s ON g.key=(s.value->>'bestobjid')::int8
 		JOIN aa_SDSS2003.Photoz as p ON g.key=p.key
-	WHERE (g.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
-	  AND (g.value->>'mode')::int4<>1
+	WHERE (g.value->>'type')::int8=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+	  AND (g.value->>'mode')::int8<>1
 );
 ALTER TABLE PhotoObjAll_Galaxy ADD PRIMARY KEY (key);
 
@@ -60,8 +60,8 @@ DROP TABLE IF EXISTS PhotoObjAll_GalaxyComplementary;
 CREATE TABLE PhotoObjAll_GalaxyComplementary AS (
 	SELECT g.key, g.value-ARRAY['ra','dec','u','g','r','i','z','psfmagerr_u','psfmagerr_g','psfmagerr_r','psfmagerr_i','psfmagerr_z'] AS value
 	FROM aa_SDSS2003.PhotoObjAll as g 
-	WHERE (g.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp) 
-		AND (g.value->>'mode')::int4<>1
+	WHERE (g.value->>'type')::int8=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp) 
+		AND (g.value->>'mode')::int8<>1
 		AND EXISTS (SELECT 'Found' FROM aa_SDSS2003.Photoz as p WHERE g.key=p.key)
 );
 ALTER TABLE PhotoObjAll_GalaxyComplementary ADD PRIMARY KEY (key);
@@ -72,9 +72,9 @@ DROP TABLE IF EXISTS PhotoObjAll_Other;
 CREATE TABLE PhotoObjAll_Other AS (
   SELECT *
   FROM aa_SDSS2003.PhotoObjAll p 
-	WHERE (p.value->>'mode')::int<>1
-	  AND ((p.value->>'type')::int4<>3 --class<>'GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
-	    OR ((p.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp) 
+	WHERE (p.value->>'mode')::int8<>1
+	  AND ((p.value->>'type')::int8<>3 --class<>'GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+	    OR ((p.value->>'type')::int8=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp) 
 				AND NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003.Photoz as pz WHERE pz.key=p.key)))
 );
 ALTER TABLE PhotoObjAll_Other ADD PRIMARY KEY (key);
@@ -162,8 +162,8 @@ SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.v
 				g.value->'SpecObj'->>'specobjid', g.value->'SpecObj'->>'ra', g.value->'SpecObj'->>'dec', g.value->'SpecObj'->>'z' 
 FROM PhotoObjAll_Galaxy as g 
 WHERE g.key IN (1237645941824356443) --({objidlist})
-	AND (g.value->>'i')::float4 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
-	AND (g.value->>'z')::float4 > 0 --{z1}
+	AND (g.value->>'i')::float8 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
+	AND (g.value->>'z')::float8 > 0 --{z1}
 UNION ALL
 -- Galaxies that are primary objects
 SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'psfmagerr_u' as u_err, g.value->>'psfmagerr_g' as g_err, g.value->>'psfmagerr_r' as r_err, g.value->>'psfmagerr_i' as i_err, g.value->>'psfmagerr_z' as z_err, 
@@ -173,12 +173,12 @@ FROM (
 			SELECT pp.KEY, pp.value
 			FROM PhotoObjAll_Primary pp 
 			WHERE pp.key IN (1237645941824356443)
-			  AND (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
-			  AND (pp.value->>'i')::float4 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
+			  AND (pp.value->>'type')::int8=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+			  AND (pp.value->>'i')::float8 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
 			) as g 
 	LEFT OUTER JOIN SpecObjAll s ON g.KEY=(s.value->>'bestobjid')::int8
 	JOIN Photoz as p ON g.key=p.key
-WHERE (p.value->>'z')::float4 > 0 --{z1}
+WHERE (p.value->>'z')::float8 > 0 --{z1}
 ;
 	
 -- (11.40%) select g.objid,g.ra,g.dec, g.u,g.g,g.r,g.i,g.z, g.psfmagerr_u as u_err, g.psfmagerr_g as g_err, g.psfmagerr_r as r_err, g.psfmagerr_i as i_err, g.psfmagerr_z as z_err, p.pid,p.version,p.z,p.zerr,p.t,p.terr,p.quality, s.specobjid,s.ra,s.dec,s.z from db_2003.galaxy as g left outer join db_2003.specobjall s on g.objid=s.bestobjid, db_2003.photoz as p where g.objid in ({objidlist}) and g.objid=p.objid and g.i between 15 and 21 and p.z between {z1} and {z2}
@@ -189,8 +189,8 @@ SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.v
 				g.value->'SpecObj'->>'specobjid', g.value->'SpecObj'->>'ra', g.value->'SpecObj'->>'dec', g.value->'SpecObj'->>'z' 
 FROM PhotoObjAll_Galaxy as g 
 WHERE g.key IN (1237645941824356443) --({objidlist})
-	AND (g.value->>'i')::float4 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
-	AND (g.value->>'z')::float4 BETWEEN 0 AND 1.0 --{z1}
+	AND (g.value->>'i')::float8 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
+	AND (g.value->>'z')::float8 BETWEEN 0 AND 1.0 --{z1}
 UNION ALL
 -- Galaxies that are primary objects
 SELECT g.key, g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'psfmagerr_u' as u_err, g.value->>'psfmagerr_g' as g_err, g.value->>'psfmagerr_r' as r_err, g.value->>'psfmagerr_i' as i_err, g.value->>'psfmagerr_z' as z_err, 
@@ -200,12 +200,12 @@ FROM (
 			SELECT  pp.KEY, pp.value
 			FROM PhotoObjAll_Primary pp --({objidlist})
 			WHERE key IN (1237645941824356443)
-			  AND (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
-			  AND (pp.value->>'i')::float4 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
+			  AND (pp.value->>'type')::int8=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+			  AND (pp.value->>'i')::float8 BETWEEN 14.0 AND 21.0 -- Should be BETWEEN 15 AND 21
 			) as g 
 	LEFT OUTER JOIN SpecObjAll s ON g.KEY=(s.value->>'bestobjid')::int8
 	JOIN Photoz as p ON g.key=p.key
-WHERE (p.value->>'z')::float4 BETWEEN 0 AND 1.0 --{z1}
+WHERE (p.value->>'z')::float8 BETWEEN 0 AND 1.0 --{z1}
 ;
 
 -- THIS IS THE SIMPLIFIED VERSION OF THE PREVIOUS TWO QUERIES IF WE ALLOW PhotoObjects that are Primary and Galaxies to be replicated in two different tables
