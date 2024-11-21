@@ -2,9 +2,8 @@
   weight: 0.1066
   query: |
     SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-    FROM PhotoObjAll p
+    FROM PhotoObjAll_Primary p
     WHERE p.key IN ({objidlist})
-      AND (p.value->>'mode')::int8=1
     UNION ALL
     SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
     FROM PhotoObjAll_Galaxy p
@@ -16,9 +15,8 @@
   weight: 0.0133
   query: |
     SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-    FROM PhotoObjAll p
+    FROM PhotoObjAll_Primary p
     WHERE p.key IN ({objidlist})
-      AND (p.value->>'mode')::int8=1
     UNION ALL
     SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
     FROM PhotoObjAll_Galaxy p
@@ -60,7 +58,11 @@
   weight: 0.1078
   query: |
     SELECT p.key, p.value 
-    FROM PhotoObjAll p
+    FROM PhotoObjAll_Other p
+    WHERE p.key = {objid}
+    UNION ALL
+    SELECT p.key, p.value 
+    FROM PhotoObjAll_Primary p
     WHERE p.key = {objid}
     UNION ALL
     SELECT g.key, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||c.value
