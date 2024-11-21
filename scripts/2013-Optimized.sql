@@ -145,6 +145,7 @@ CREATE TABLE PhotozRF AS (
 	WHERE NOT EXISTS (SELECT 'Found' FROM PhotoObjAll_Galaxy g WHERE g.key=p.key )
 );
 ALTER TABLE PhotozRF ADD PRIMARY KEY (key);
+ANALYZE PhotozRF;
 
 -- This table contains the attributes of those PhotozRF embeded in PhotoObjAll_Galaxy but not projected there
 DROP TABLE IF EXISTS PhotozRF_Complementary;
@@ -154,6 +155,7 @@ CREATE TABLE PhotozRF_Complementary AS (
 	WHERE EXISTS (SELECT 'Found' FROM PhotoObjAll_Galaxy g WHERE g.key=p.key)
 );
 ALTER TABLE PhotozRF_Complementary ADD PRIMARY KEY (key);
+ANALYZE PhotozRF_Complementary;
 
 DROP TABLE IF EXISTS Field;
 CREATE TABLE Field AS (
@@ -161,6 +163,7 @@ CREATE TABLE Field AS (
 	FROM aa_SDSS2003_optimized.Field f
 );
 ALTER TABLE Field ADD PRIMARY KEY (key);
+ANALYZE Field;
 
 DROP TABLE IF EXISTS Frame;
 CREATE TABLE Frame AS (
@@ -168,6 +171,7 @@ CREATE TABLE Frame AS (
 	FROM aa_SDSS2003_optimized.Frame f
 );
 ALTER TABLE Frame ADD PRIMARY KEY (key1, key2);
+ANALYZE Frame;
 
 DROP TABLE IF EXISTS GalSpecIndx;
 CREATE TABLE GalSpecIndx AS (
@@ -175,6 +179,7 @@ CREATE TABLE GalSpecIndx AS (
 	FROM aa_SDSS2003_optimized.GalSpecIndx g
 );
 ALTER TABLE GalSpecIndx ADD PRIMARY KEY (key);
+ANALYZE GalSpecIndx;
 
 
 --*********************************************************** Queries *************************************************************************
@@ -214,6 +219,7 @@ SELECT g.key,
 FROM PhotoObjAll_Galaxy g 
 WHERE g.key IN (1237645941824356443); --({objidlist})
 
+
 -- (5.47%)	select * from db_2013.specobjall where specobjid = {specobjid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
@@ -224,25 +230,31 @@ WHERE s1.key = 77628570523926528; -- {specobjid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value 
 FROM Photoz p
+WHERE p.key = 1237645941824356443 -- {objid}
 UNION ALL
 SELECT g.key, (g.value->'Photoz')::jsonb||c.value
 FROM PhotoObjAll_Galaxy g
-  JOIN Photoz_Complementary c ON g.key=c.key;
+  JOIN Photoz_Complementary c ON g.key=c.KEY
+WHERE g.key = 1237645941824356443; -- {objid}
+;
 
 -- (10.78%)	select * from db_2013.photoobjall where objid= {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT p.key, p.value 
 FROM PhotoObjAll p
+WHERE p.key = 1237656511207048216 -- {objid}
 UNION ALL
 SELECT g.key, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||c.value
 FROM PhotoObjAll_Galaxy g
-  JOIN PhotoObjAll_GalaxyComplementary c ON g.key=c.key;
+  JOIN PhotoObjAll_GalaxyComplementary c ON g.key=c.KEY
+WHERE g.key = 1237656511207048216; -- {objid}
+
 
 -- (3.49%)	select * from db_2013.frame where fieldid={fieldid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM Frame
-WHERE key1 = 1237651250943492096 AND key2 = 25; -- frameid={frameid}
+WHERE key1 = 1237651250943492096; -- frameid={frameid}
 
 -- (2.63%)	select * from db_2013.field where fieldid={fieldid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)

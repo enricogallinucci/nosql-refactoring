@@ -128,7 +128,7 @@ WHERE g.key = 1237656511207048216 -- {objid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT *
 FROM Frame
-WHERE key1 = 1237651250943492096 AND key2 = 25; -- fieldid={fieldid}
+WHERE key1 = 1237651250943492096; -- fieldid={fieldid}
 
 -- (2.63%)	select * from db_2013.field where fieldid={fieldid}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)

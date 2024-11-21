@@ -89,7 +89,7 @@
   query: |
     SELECT *
     FROM Frame
-    WHERE key1 = {fieldid} AND key2 = 25
+    WHERE key1 = {fieldid}
   params: fieldid
 -
   weight: 0.0263
