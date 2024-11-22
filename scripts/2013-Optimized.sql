@@ -66,7 +66,23 @@ ANALYZE PhotoObjAll_GalaxyComplementary;
 DROP TABLE IF EXISTS PhotoObjAll_Primary;
 CREATE TABLE PhotoObjAll_Primary AS (
 -- This takes all primary objects in 2003 optimized except those already included in PhotoObjAll_Galaxy
-SELECT pp.key, pp.value||pc.value AS value
+SELECT p.key, jsonb_build_object('run', p.value->>'run', 'rerun', p.value->>'rerun', 'camcol', p.value->>'camcol', 'field', p.value->>'field', 'obj', p.value->>'obj', 'type', p.value->>'type', 'ra', p.value->>'ra', 'dec', p.value->>'dec', 'u', p.value->>'u', 'g', p.value->>'g', 'r', p.value->>'r', 'i', p.value->>'i', 'z', p.value->>'z', 'err_u', p.value->>'err_u', 'err_g', p.value->>'err_g', 'err_r', p.value->>'err_r', 'err_i', p.value->>'err_i', 'err_z', p.value->>'err_z' 
+) AS value 
+FROM aa_SDSS2003_optimized.PhotoObjAll_Primary p
+  JOIN aa_SDSS2003_optimized.PhotoObjAll_PrimaryComplementary pc ON p.key=pc.KEY
+WHERE (p.value->>'type')::int8 <> 3 --OR (pc.value->>'type')::int4<>3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+  OR ((pc.value->>'flags')::int8 & 262144) <> 0
+	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.Photoz as pz WHERE p.key=pz.key)
+	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE p.key=pzr.key)
+);
+ALTER TABLE PhotoObjAll_Primary ADD PRIMARY KEY (key);
+ANALYZE PhotoObjAll_Primary;
+
+-- This table contains all photoobjects, except galaxies in PhotoObjAll_Galaxy
+DROP TABLE IF EXISTS PhotoObjAll_PrimaryComplementary;
+CREATE TABLE PhotoObjAll_PrimaryComplementary AS (
+-- This takes all primary objects in 2003 optimized except those already included in PhotoObjAll_Galaxy
+SELECT pp.key, (pp.value-ARRAY['run', 'rerun', 'camcol', 'field', 'obj', 'type', 'ra', 'dec', 'u', 'g', 'r', 'i', 'z', 'err_u', 'err_g', 'err_r', 'err_i', 'err_z'])||pc.value AS value
 FROM aa_SDSS2003_optimized.PhotoObjAll_Primary pp
   JOIN aa_SDSS2003_optimized.PhotoObjAll_PrimaryComplementary pc ON pp.key=pc.KEY
 WHERE (pp.value->>'type')::int8 <> 3 --OR (pc.value->>'type')::int4<>3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
@@ -74,8 +90,8 @@ WHERE (pp.value->>'type')::int8 <> 3 --OR (pc.value->>'type')::int4<>3 --class='
 	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.Photoz as p WHERE pp.key=p.key)
 	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE pp.key=pzr.key)
 );
-ALTER TABLE PhotoObjAll_Primary ADD PRIMARY KEY (key);
-ANALYZE PhotoObjAll_Primary;
+ALTER TABLE PhotoObjAll_PrimaryComplementary ADD PRIMARY KEY (key);
+ANALYZE PhotoObjAll_PrimaryComplementary;
 
 -- This table contains all photoobjects, except galaxies in PhotoObjAll_Galaxy
 DROP TABLE IF EXISTS PhotoObjAll_Other;
