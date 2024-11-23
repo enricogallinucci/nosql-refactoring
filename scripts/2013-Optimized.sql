@@ -100,15 +100,6 @@ CREATE TABLE PhotoObjAll_Other AS (
 SELECT p.key, p.value 
 FROM aa_SDSS2003_optimized.PhotoObjAll_Other p
 UNION ALL
--- This takes all primary objects in 2003 optimized except those already included in PhotoObjAll_Galaxy
-SELECT pp.key, pp.value||pc.value AS value
-FROM aa_SDSS2003_optimized.PhotoObjAll_Primary pp
-  JOIN aa_SDSS2003_optimized.PhotoObjAll_PrimaryComplementary pc ON pp.key=pc.KEY
-WHERE (pp.value->>'type')::int8 <> 3 --OR (pc.value->>'type')::int4<>3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
-  OR ((pc.value->>'flags')::int8 & 262144) <> 0
-	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.Photoz as p WHERE pp.key=p.key)
-	OR NOT EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE pp.key=pzr.key)
-UNION ALL
 -- This takes all galaxies in 2003 optimized except those already included in PhotoObjAll_Galaxy
 SELECT g.key, (g.value-ARRAY['Photoz','SpecObj'])::jsonb||gc.value
 FROM aa_SDSS2003_optimized.PhotoObjAll_Galaxy g
@@ -120,7 +111,7 @@ WHERE (((gc.value->>'flags')::int8 & 262144) <> 0
 ALTER TABLE PhotoObjAll_Other ADD PRIMARY KEY (key);
 ANALYZE PhotoObjAll_Other;
 
--- This table contains SpecObjAll that are not embeded in PhotoObjAll_Galaxy
+-- This table contains all SpecObjAll
 DROP TABLE IF EXISTS SpecObjAll;
 CREATE TABLE SpecObjAll AS (
 	SELECT *
