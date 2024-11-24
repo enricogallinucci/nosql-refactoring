@@ -7,8 +7,7 @@
     UNION ALL
     SELECT g.key, g.value->>'run', g.value->>'rerun', g.value->>'camcol', g.value->>'field', g.value->>'obj', g.value->>'type', g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
     FROM PhotoObjAll_Galaxy g 
-	JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key
-    WHERE (gc.value->>'mode')::int8=1
+    WHERE (g.value->>'mode')::int8=1
       AND g.key IN ({objidlist})
   params: objidlist
 -
@@ -20,58 +19,36 @@
     UNION ALL
     SELECT g.key, g.value->>'run', g.value->>'rerun', g.value->>'camcol', g.value->>'field', g.value->>'obj', g.value->>'type', g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
     FROM PhotoObjAll_Galaxy g 
-	JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key
-    WHERE (gc.value->>'mode')::int8=1
-      AND g.key IN  ({objidlist})
+    WHERE (g.value->>'mode')::int8=1
+      AND g.key IN ({objidlist})
     LIMIT 1
   params: objidlist
 -
   weight: 0.0903
   query: |
-    SELECT ra, dec, dered_r, sz, pz
-    FROM (
-	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (gc.value->>'dered_r')::float8 AS dered_r, (s.value->>'z')::float8 AS sz, (g.value->'Photoz'->>'z')::float8 AS pz
-	FROM PhotoObjAll_Galaxy as g 
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.KEY
-	  LEFT OUTER JOIN SpecObjAll AS s ON (s.value->>'bestobjid')::int8 = g.key
-	WHERE g.key IN ({objidlist})
-	UNION ALL
-	-- Galaxies that are primary objects
-	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (g.value->>'dered_r')::float8 AS dered_r, (s.value->>'z')::float8 AS sz, (p.value->>'z')::float8 AS pz
-	FROM (
-        	SELECT  pp.KEY, pp.value||pc.value AS value
-		FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN ({objidlist})) pp 
-		  JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN ({objidlist})) pc ON pp.KEY=pc.KEY
-		WHERE (pp.value->>'type')::int8=3
-		  AND pp.key IN ({objidlist})
-          ) as g
+      SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, g.value->>'dered_r', s.value->>'z' AS sz, pz.value->>'z' AS pz
+FROM PhotoObjAll_Galaxy as g 
 	LEFT OUTER JOIN SpecObjAll s ON g.KEY=(s.value->>'bestobjid')::int8
-	LEFT OUTER JOIN Photoz as p ON g.key=p.KEY
-	) _
-    WHERE pz < {z2} AND pz > {z1}
-      AND dered_r < {dered_r2} AND dered_r > {dered_r1}
+	LEFT OUTER JOIN Photoz as pz ON g.key=pz.KEY
+      WHERE g.key IN ({objidlist})
+        AND pz < {z2} AND pz > {z1}
+        AND dered_r < {dered_r2} AND dered_r > {dered_r1}
   params: dered_r,z,objidlist
 -
   weight: 0.0767
   query: |
     SELECT key, value->>'ra', value->>'dec' 
     FROM SpecObjAll s
-    WHERE  (value->>'ra')::float8 BETWEEN {ra1} and {ra2} 
+    WHERE (value->>'ra')::float8 BETWEEN {ra1} and {ra2} 
       AND (value->>'dec')::float8 BETWEEN {dec1} and {dec2}
   params: dec_p,ra_p
 -
   weight: 0.0142
   query: |
-    SELECT key, value 
-    FROM (
-	SELECT pc.key, pc.value||(g.value->'Photoz')::jsonb AS value
-	FROM Photoz_Complementary pc 
-	  JOIN PhotoObjAll_Galaxy g ON g.key=pc.key
-	UNION ALL
-	SELECT p.KEY, p.value
-	FROM Photoz p
-	) _
-    WHERE key={objid}
+    SELECT pc.key, pc.value||p.value AS value
+    FROM PhotozComplementary pc 
+	JOIN Photoz p ON p.key=pc.key
+    WHERE p.key={objid}
   params: objid
 # Next one is another that summarizes two queries
 -
@@ -82,10 +59,11 @@
 	SELECT *
 	FROM PhotoObjAll_Other
 	UNION ALL
-	SELECT p.key, p.value
+	SELECT p.key, p.value||pc.value AS value
 	FROM PhotoObjAll_Primary p
+	  JOIN PhotoObjAll_PrimaryComplementary pc ON p.key=pc.key
 	UNION ALL
-	SELECT g.key, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
+	SELECT g.key, g.value||gc.value AS value
 	FROM PhotoObjAll_Galaxy g
 	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key
 	) _
@@ -99,13 +77,11 @@
 	SELECT *
 	FROM PhotoObjAll_Other
 	UNION ALL
-	SELECT p.KEY, p.value||pc.value
+	SELECT p.KEY, p.value
 	FROM PhotoObjAll_Primary p
-	  JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 	UNION ALL
-	SELECT g.KEY, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
+	SELECT g.KEY, g.value
 	FROM PhotoObjAll_Galaxy g
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) _
     WHERE ((value->>'ra')::float8 BETWEEN {ra1} and {ra2})
       AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
@@ -123,13 +99,12 @@
 	FROM PhotoObjAll_Primary p
 		JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 	UNION ALL
-	SELECT g.KEY, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
+	SELECT g.KEY, g.value||gc.value AS value
 	FROM PhotoObjAll_Galaxy g
 	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) _
     WHERE (value->>'mode')::int8 in (1,2)
       AND key IN ({objid})
-
   params: objid
 -
   weight: 0.0061
@@ -142,9 +117,8 @@
 	SELECT p.KEY, p.value
 	FROM PhotoObjAll_Primary p
 	UNION ALL
-	SELECT g.KEY, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
+	SELECT g.KEY, g.value
 	FROM PhotoObjAll_Galaxy g
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) p
 	JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
     WHERE ((p.value->>'ra')::float8 BETWEEN {ra1} and {ra2}) 
@@ -161,9 +135,8 @@
 	SELECT p.KEY, p.value
 	FROM PhotoObjAll_Primary p
 	UNION ALL
-	SELECT g.KEY, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
+	SELECT g.KEY, g.value
 	FROM PhotoObjAll_Galaxy g
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) p
 	JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
     WHERE ((p.value->>'ra')::float8 BETWEEN {ra1} and {ra2}) 
@@ -180,12 +153,11 @@
 	SELECT p.KEY, p.value
 	FROM PhotoObjAll_Primary p
 	UNION ALL
-	SELECT g.KEY, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
+	SELECT g.KEY, g.value
 	FROM PhotoObjAll_Galaxy g
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) p
 	JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
-    WHERE (s.value->>'plate')::int8={plate} AND (ph.value->>'mjd')::int8={mjd} AND (ph.value->>'fiberid')::int8={fiberid}
+    WHERE (s.value->>'plate')::int8={plate} AND (s.value->>'mjd')::int8={mjd} AND (s.value->>'fiberid')::int8={fiberid}
   params: plate-mjd-fiberid
 -
   weight: 0.0062
@@ -198,9 +170,8 @@
 	SELECT p.KEY, p.value
 	FROM PhotoObjAll_Primary p
 	UNION ALL
-	SELECT g.KEY, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
+	SELECT g.KEY, g.value
 	FROM PhotoObjAll_Galaxy g
-	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) ph
 	JOIN SpecObjAll s ON ph.key=(s.value->>'bestobjid')::int8
     JOIN Platex pl ON pl.key=(s.value->>'plateid')::int8
@@ -220,11 +191,15 @@
 	FROM PhotoObjAll_Primary p
 			JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 	UNION ALL
-	SELECT g.KEY, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
+	SELECT g.KEY, g.value||gc.value AS value
 	FROM PhotoObjAll_Galaxy g
 	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) p
-	JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
+	JOIN (
+		SELECT s.KEY, s.value||sc.value AS value
+		FROM SpecObjAll s 
+			JOIN SpecObjAllComplementary sc ON s.key=sc.key
+		) s ON p.key=(s.value->>'bestobjid')::int8
     JOIN Platex pl ON pl.key=(s.value->>'plateid')::int8
     WHERE (s.value->>'scienceprimary')::int8=1
   	AND ((p.value->>'ra')::float8 BETWEEN {ra1} and {ra2})
@@ -234,9 +209,8 @@
 -
   weight: 0.0162
   query: |
-    SELECT fr.key1, fr.key2, fr.value||fi.value
-    FROM Field fi
-      JOIN Frame fr ON fi.key=fr.key1
+    SELECT fr.key1, fr.key2, fr.value
+    FROM Frame_0 fr
     WHERE fr.key1 IN ({fieldidlist}) 
       and fr.key2=0
   params: fieldidlist
