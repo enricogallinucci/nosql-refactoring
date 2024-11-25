@@ -11,7 +11,7 @@ CREATE TABLE PhotoObjAll_Galaxy AS (
 SELECT g.key, jsonb_build_object(
 				'Photoz', jsonb_build_object('z', g.value->'Photoz'->>'z', 'zerr', g.value->'Photoz'->>'zerr'), 
 				'PhotozRF', jsonb_build_object('z', pzr.value->>'z', 'zerr', pzr.value->>'zerr'), 
-				'u', g.value->>'u', 'g', g.value->>'g', 'r', g.value->>'r', 'i', g.value->>'i', 'z', g.value->>'z',
+				'u', g.value->>'u', 'g', g.value->>'g', 'r', g.value->>'r', 'i', g.value->>'i', 'z', g.value->>'z', 'ra', g.value->>'ra', 'dec', g.value->>'dec',
 				'err_u', gc.value->>'err_u', 'err_g', gc.value->>'err_g', 'err_r', gc.value->>'err_r', 'err_i', gc.value->>'err_i', 'err_z', gc.value->>'err_z') AS value 
 FROM aa_SDSS2003_optimized.PhotoObjAll_Galaxy as g 
 	JOIN aa_SDSS2003_optimized.PhotozRF pzr ON pzr.key=g.KEY
@@ -22,7 +22,7 @@ UNION ALL
 SELECT g.key, jsonb_build_object(
 				'Photoz', jsonb_build_object('z', p.value->'Photoz'->>'z', 'zerr', p.value->'Photoz'->>'zerr'), 
 				'PhotozRF', jsonb_build_object('z', pzr.value->>'z', 'zerr', pzr.value->>'zerr'), 
-				'u', g.value->>'u', 'g', g.value->>'g', 'r', g.value->>'r', 'i', g.value->>'i', 'z', g.value->>'z',
+				'u', g.value->>'u', 'g', g.value->>'g', 'r', g.value->>'r', 'i', g.value->>'i', 'z', g.value->>'z', 'ra', g.value->>'ra', 'dec', g.value->>'dec',
 				'err_u', g.value->>'err_u', 'err_g', g.value->>'err_g', 'err_r', g.value->>'err_r', 'err_i', g.value->>'err_i', 'err_z', g.value->>'err_z') AS value
 FROM (
 			SELECT  pp.KEY, pp.value||pc.value AS value
@@ -41,7 +41,7 @@ ANALYZE PhotoObjAll_Galaxy;
 -- Galaxies that are NOT primary objects in 2003 optimized
 DROP TABLE IF EXISTS PhotoObjAll_GalaxyComplementary;
 CREATE TABLE PhotoObjAll_GalaxyComplementary AS (
-SELECT g.key, g.value-ARRAY['u', 'g', 'r', 'i', 'z', 'err_u', 'err_g', 'err_r', 'err_i', 'err_z'] AS value
+SELECT g.key, g.value-ARRAY['u', 'g', 'r', 'i', 'z', 'ra', 'dec', 'err_u', 'err_g', 'err_r', 'err_i', 'err_z'] AS value
 FROM aa_SDSS2003_optimized.PhotoObjAll_Galaxy as g 
 WHERE ((g.value->>'flags')::int8 & 262144) = 0
 	AND EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.Photoz as p WHERE g.key=p.key)
