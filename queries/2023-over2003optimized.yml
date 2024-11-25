@@ -222,24 +222,24 @@
     FROM (
       SELECT *
       FROM (
-		SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
-		FROM (
-			SELECT *
-			FROM PhotoObjAll_Other
-			UNION ALL
-			SELECT p.KEY, p.value||pc.value AS value
-			FROM PhotoObjAll_Primary p
-				JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
-			) p
-			JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
-		UNION ALL
-		SELECT g.KEY, (g.value-'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
-		FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
-		  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
-  ) _
+        SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
+        FROM (
+            SELECT *
+            FROM PhotoObjAll_Other
+            UNION ALL
+            SELECT p.KEY, p.value||pc.value AS value
+            FROM PhotoObjAll_Primary p
+                JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+            ) p
+            JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
+        UNION ALL
+        SELECT g.KEY, (g.value-'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
+        FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
+          JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
+    ) _
     WHERE (value->'SpecObj'->>'scienceprimary')::int8=1
-  	AND ((value->>'ra')::float8 BETWEEN {ra1} and {ra2})
-  	AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
+      AND ((value->>'ra')::float8 BETWEEN {ra1} and {ra2})
+      AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
       ) s
     JOIN Platex pl ON pl.key=(s.value->'SpecObj'->>'plateid')::int8
     LIMIT 1
