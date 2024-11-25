@@ -203,11 +203,12 @@
       JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
     ) ph
     JOIN SpecObjAll s ON ph.key=(s.value->>'bestobjid')::int8
-    JOIN Platex pl ON pl.key=(s.value->>'plateid')::int8
+    JOIN Platex pl ON pl.key=(s.value->>'plate')::int8
     WHERE (s.value->>'scienceprimary')::int8=1
     AND ((ph.value->>'ra')::float8 BETWEEN {ra1} and {ra2}) 
         AND ((ph.value->>'dec')::float8 BETWEEN {dec1} and {dec2})
   params: ra_p,dec_p
+# SLOW
 -
   weight: 0.0061
   query: |
@@ -225,7 +226,7 @@
       JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
     ) p
     JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
-    JOIN Platex pl ON pl.key=(s.value->>'plateid')::int8
+    JOIN Platex pl ON pl.key=(s.value->>'plate')::int8
     WHERE (s.value->>'scienceprimary')::int8=1
       AND ((p.value->>'ra')::float8 BETWEEN {ra1} and {ra2})
       AND ((p.value->>'dec')::float8 BETWEEN {dec1} and {dec2})
