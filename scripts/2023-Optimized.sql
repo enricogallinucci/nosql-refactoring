@@ -108,9 +108,20 @@ ALTER TABLE SpecObjAll ADD PRIMARY KEY (key);
 
 DROP INDEX IF EXISTS idx_SpecObjAll_ra_dec;
 CREATE INDEX idx_SpecObjAll_ra_dec ON SpecObjAll(
-  CAST(value->>'ra' AS FLOAT),
-  CAST(value->>'dec' AS FLOAT)
+  CAST(value->>'ra' AS FLOAT8),
+  CAST(value->>'dec' AS FLOAT8)
 );
+
+DROP INDEX IF EXISTS idx_SpecObjAll_bestobjid;
+CREATE INDEX idx_SpecObjAll_bestobjid ON SpecObjAll(
+  CAST(value->>'bestobjid' AS int8)
+);
+
+DROP INDEX IF EXISTS idx_SpecObjAll_plate;
+CREATE INDEX idx_SpecObjAll_plate ON SpecObjAll(
+  CAST(value->>'plate' AS int8)
+);
+
 ANALYZE SpecObjAll;
 
 -- This table contains all other attributes of SpecObjAll
@@ -363,7 +374,7 @@ FROM (
 	FROM PhotoObjAll_Galaxy g
 	) ph
 	JOIN SpecObjAll s ON ph.key=(s.value->>'bestobjid')::int8
-  JOIN Platex pl ON pl.key=(s.value->>'plateid')::int8
+  JOIN Platex pl ON pl.key=(s.value->>'plate')::int8
 WHERE (s.value->>'scienceprimary')::int8=1
 	AND ((ph.value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
 	AND ((ph.value->>'dec')::float8 BETWEEN 15 AND 20);  -- (p.dec between {dec1} and {dec2}))
@@ -388,7 +399,7 @@ FROM (
 		FROM SpecObjAll s 
 			JOIN SpecObjAllComplementary sc ON s.key=sc.key
 		) s ON p.key=(s.value->>'bestobjid')::int8
-  JOIN Platex pl ON pl.key=(s.value->>'plateid')::int8
+  JOIN Platex pl ON pl.key=(s.value->>'plate')::int8
 WHERE (s.value->>'scienceprimary')::int8=1
 	AND ((p.value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
 	AND ((p.value->>'dec')::float8 BETWEEN 15 AND 20) -- (p.dec between {dec1} and {dec2}))
