@@ -48,7 +48,7 @@ WHERE ((g.value->>'flags')::int8 & 262144) = 0
 	AND EXISTS (SELECT 'Found' FROM aa_SDSS2003_optimized.PhotozRF as pzr WHERE g.key=pzr.key)
 UNION ALL
 -- Galaxies that are primary objects in 2003 optimized
-SELECT g.key, g.value-ARRAY['u', 'g', 'r', 'i', 'z', 'err_u', 'err_g', 'err_r', 'err_i', 'err_z']
+SELECT g.key, g.value-ARRAY['u', 'g', 'r', 'i', 'z', 'ra', 'dec', 'err_u', 'err_g', 'err_r', 'err_i', 'err_z']
 FROM (
 			SELECT  pp.KEY, pp.value||pc.value AS value
 			FROM (SELECT * FROM aa_SDSS2003_optimized.PhotoObjAll_Primary) pp 

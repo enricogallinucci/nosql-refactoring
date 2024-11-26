@@ -213,38 +213,38 @@
         AND ((value->>'ra')::float8 BETWEEN {ra1} and {ra2}) 
         AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
       ) s
-      JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plate')::int8;
+      JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plateid')::int8;
   params: ra_p,dec_p
 # SLOW
-# -
-#   weight: 0.0061
-#   query: |
-#     SELECT s.value->'SpecObj'->>'instrument', s.value->'SpecObj'->>'bossspecobjid', pl.value->>'seeing50', s.value->>'psffwhm_r', s.value->>'field', s.value->>'run', s.value->>'camcol', s.value->>'rowc_r', s.value->>'colc_r', s.value->>'rowc', s.value->>'colc', s.value->>'fracdev_r', s.value->>'devab_r', s.value->>'devphi_r', s.value->'SpecObj'->>'specobjid', s.value->'SpecObj'->>'bestobjid', s.value->>'objid', s.value->'SpecObj'->>'plate', s.value->'SpecObj'->>'fiberid', s.value->>'insidemask', s.value->>'flags', s.value->>'sky_r', s.value->>'petroflux_r', s.value->>'petrofluxivar_r', s.value->>'fiber2flux_r', s.value->>'petrorad_r', s.value->>'petroraderr_r', s.value->>'petror50_r', s.value->>'petror50err_r', s.value->>'petror90_r', s.value->>'petror90err_r', s.value->>'devrad_r', s.value->>'devraderr_r', s.value->>'devflux_r', s.value->>'devfluxivar_r', s.value->>'airmass_r', s.value->>'cloudcam_r', s.value->>'calibstatus_r', s.value->'SpecObj'->>'z', s.value->'SpecObj'->>'zerr', s.value->'SpecObj'->>'zwarning', s.value->'SpecObj'->>'class', s.value->'SpecObj'->>'z_noqso', s.value->'SpecObj'->>'zerr_noqso', s.value->'SpecObj'->>'zwarning_noqso', s.value->'SpecObj'->>'veldisp', s.value->'SpecObj'->>'veldisperr', s.value->'SpecObj'->>'veldispz', s.value->'SpecObj'->>'veldispzerr', s.value->'SpecObj'->>'veldispchi2', s.value->'SpecObj'->>'veldispnpix', s.value->'SpecObj'->>'veldispdof', s.value->'SpecObj'->>'snmedian_r', s.value->'SpecObj'->>'snmedian', s.value->'SpecObj'->>'chi68p', s.value->'SpecObj'->>'fracnsigma_1', s.value->'SpecObj'->>'fracnsighi_1', s.value->'SpecObj'->>'fracnsiglo_1', s.value->'SpecObj'->>'spectroflux_r', s.value->'SpecObj'->>'spectrosynflux_r', s.value->'SpecObj'->>'spectrofluxivar_r', s.value->'SpecObj'->>'spectrosynfluxivar_r', s.value->>'expflux_r', s.value->>'expab_r', s.value->>'exprad_r', s.value->>'expphi_r', s.value->>'psfflux_r'
-#     FROM (
-#       SELECT *
-#       FROM (
-#         SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
-#         FROM (
-#             SELECT *
-#             FROM PhotoObjAll_Other
-#             UNION ALL
-#             SELECT p.KEY, p.value||pc.value AS value
-#             FROM PhotoObjAll_Primary p
-#                 JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
-#             ) p
-#             JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
-#         UNION ALL
-#         SELECT g.KEY, (g.value-'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
-#         FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
-#           JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
-#     ) _
-#     WHERE (value->'SpecObj'->>'scienceprimary')::int8=1
-#       AND ((value->>'ra')::float8 BETWEEN {ra1} and {ra2})
-#       AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
-#       ) s
-#     JOIN Platex pl ON pl.key=(s.value->'SpecObj'->>'plate')::int8
-#     LIMIT 1
-#   params: ra_p,dec_p
+-
+  weight: 0.0061
+  query: |
+    SELECT s.value->'SpecObj'->>'instrument', s.value->'SpecObj'->>'bossspecobjid', pl.value->>'seeing50', s.value->>'psffwhm_r', s.value->>'field', s.value->>'run', s.value->>'camcol', s.value->>'rowc_r', s.value->>'colc_r', s.value->>'rowc', s.value->>'colc', s.value->>'fracdev_r', s.value->>'devab_r', s.value->>'devphi_r', s.value->'SpecObj'->>'specobjid', s.value->'SpecObj'->>'bestobjid', s.value->>'objid', s.value->'SpecObj'->>'plate', s.value->'SpecObj'->>'fiberid', s.value->>'insidemask', s.value->>'flags', s.value->>'sky_r', s.value->>'petroflux_r', s.value->>'petrofluxivar_r', s.value->>'fiber2flux_r', s.value->>'petrorad_r', s.value->>'petroraderr_r', s.value->>'petror50_r', s.value->>'petror50err_r', s.value->>'petror90_r', s.value->>'petror90err_r', s.value->>'devrad_r', s.value->>'devraderr_r', s.value->>'devflux_r', s.value->>'devfluxivar_r', s.value->>'airmass_r', s.value->>'cloudcam_r', s.value->>'calibstatus_r', s.value->'SpecObj'->>'z', s.value->'SpecObj'->>'zerr', s.value->'SpecObj'->>'zwarning', s.value->'SpecObj'->>'class', s.value->'SpecObj'->>'z_noqso', s.value->'SpecObj'->>'zerr_noqso', s.value->'SpecObj'->>'zwarning_noqso', s.value->'SpecObj'->>'veldisp', s.value->'SpecObj'->>'veldisperr', s.value->'SpecObj'->>'veldispz', s.value->'SpecObj'->>'veldispzerr', s.value->'SpecObj'->>'veldispchi2', s.value->'SpecObj'->>'veldispnpix', s.value->'SpecObj'->>'veldispdof', s.value->'SpecObj'->>'snmedian_r', s.value->'SpecObj'->>'snmedian', s.value->'SpecObj'->>'chi68p', s.value->'SpecObj'->>'fracnsigma_1', s.value->'SpecObj'->>'fracnsighi_1', s.value->'SpecObj'->>'fracnsiglo_1', s.value->'SpecObj'->>'spectroflux_r', s.value->'SpecObj'->>'spectrosynflux_r', s.value->'SpecObj'->>'spectrofluxivar_r', s.value->'SpecObj'->>'spectrosynfluxivar_r', s.value->>'expflux_r', s.value->>'expab_r', s.value->>'exprad_r', s.value->>'expphi_r', s.value->>'psfflux_r'
+    FROM (
+      SELECT *
+      FROM (
+	SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
+	FROM (
+            SELECT *
+	    FROM PhotoObjAll_Other
+	    UNION ALL
+	    SELECT p.KEY, p.value||pc.value AS value
+	    FROM PhotoObjAll_Primary p
+		JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+	    ) p
+	JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
+	UNION ALL
+	SELECT g.KEY, (g.value-'Photoz')::jsonb||jsonb_build_object('SpecObj',sc.value) AS value
+	FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
+	 JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
+	  ) _
+      WHERE (value->'SpecObj'->>'scienceprimary')::int8=1
+  	AND ((value->>'ra')::float8 BETWEEN {ra1} and {ra2})
+  	AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
+      ) s
+    JOIN Platex pl ON pl.key=(s.value->'SpecObj'->>'plateid')::float8
+    LIMIT 1;
+  params: ra_p,dec_p
 -
   weight: 0.0162
   query: |

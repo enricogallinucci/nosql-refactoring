@@ -162,49 +162,51 @@
 -
   weight: 0.0062
   query: |
-    SELECT count(s.value->>'s.bestobjid')
+    SELECT count(s.value->>'bestobjid')
     FROM (
-      SELECT *
-      FROM PhotoObjAll_Other
-      UNION ALL
-      SELECT p.KEY, p.value
-      FROM PhotoObjAll_Primary p
-      UNION ALL
-      SELECT g.KEY, g.value
-      FROM PhotoObjAll_Galaxy g
-      ) ph
+	SELECT *
+	FROM PhotoObjAll_Other
+	UNION ALL
+	SELECT p.KEY, p.value
+	FROM PhotoObjAll_Primary p
+	UNION ALL
+	SELECT g.KEY, g.value
+	FROM PhotoObjAll_Galaxy g
+	) ph
     JOIN SpecObjAll s ON ph.key=(s.value->>'bestobjid')::int8
-      JOIN Platex pl ON pl.key=(s.value->>'plate')::int8
-      WHERE (s.value->>'scienceprimary')::int8=1
-    AND ((ph.value->>'ra')::float8 BETWEEN {ra1} and {ra2}) 
-          AND ((ph.value->>'dec')::float8 BETWEEN {dec1} and {dec2})
+    JOIN Platex pl ON pl.key=(s.value->>'plateid')::float8
+    WHERE (s.value->>'scienceprimary')::int8=1
+	AND ((ph.value->>'ra')::float8 BETWEEN {ra1} and {ra2})
+	AND ((ph.value->>'dec')::float8 BETWEEN  {dec1} and {dec2})
   params: ra_p,dec_p
-# SLOW
 -
   weight: 0.0061
   query: |
     SELECT s.value->>'instrument', s.value->>'bossspecobjid', pl.value->>'seeing50', p.value->>'psffwhm_r', p.value->>'field', p.value->>'run', p.value->>'camcol', p.value->>'rowc_r', p.value->>'colc_r', p.value->>'rowc', p.value->>'colc', p.value->>'fracdev_r', p.value->>'devab_r', p.value->>'devphi_r', s.value->>'specobjid', s.value->>'bestobjid', p.value->>'objid', s.value->>'plate', s.value->>'fiberid', p.value->>'insidemask', p.value->>'flags', p.value->>'sky_r', p.value->>'petroflux_r', p.value->>'petrofluxivar_r', p.value->>'fiber2flux_r', p.value->>'petrorad_r', p.value->>'petroraderr_r', p.value->>'petror50_r', p.value->>'petror50err_r', p.value->>'petror90_r', p.value->>'petror90err_r', p.value->>'devrad_r', p.value->>'devraderr_r', p.value->>'devflux_r', p.value->>'devfluxivar_r', p.value->>'airmass_r', p.value->>'cloudcam_r', p.value->>'calibstatus_r', s.value->>'z', s.value->>'zerr', s.value->>'zwarning', s.value->>'class', s.value->>'z_noqso', s.value->>'zerr_noqso', s.value->>'zwarning_noqso', s.value->>'veldisp', s.value->>'veldisperr', s.value->>'veldispz', s.value->>'veldispzerr', s.value->>'veldispchi2', s.value->>'veldispnpix', s.value->>'veldispdof', s.value->>'snmedian_r', s.value->>'snmedian', s.value->>'chi68p', s.value->>'fracnsigma_1', s.value->>'fracnsighi_1', s.value->>'fracnsiglo_1', s.value->>'spectroflux_r', s.value->>'spectrosynflux_r', s.value->>'spectrofluxivar_r', s.value->>'spectrosynfluxivar_r', p.value->>'expflux_r', p.value->>'expab_r', p.value->>'exprad_r', p.value->>'expphi_r', p.value->>'psfflux_r'
     FROM (
-      SELECT *
-      FROM PhotoObjAll_Other
-      UNION ALL
-      SELECT p.KEY, p.value||pc.value
-      FROM PhotoObjAll_Primary p
-          JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
-      UNION ALL
-      SELECT g.KEY, g.value||gc.value AS value
-      FROM PhotoObjAll_Galaxy g
-        JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
-      ) p
-      JOIN (
-      SELECT s.KEY, s.value||sc.value AS value
-      FROM SpecObjAll s 
-        JOIN SpecObjAllComplementary sc ON s.key=sc.key
-      ) s ON p.key=(s.value->>'bestobjid')::int8
-    JOIN Platex pl ON pl.key=(s.value->>'plate')::int8
-    WHERE (s.value->>'scienceprimary')::int8=1
-    AND ((p.value->>'ra')::float8 BETWEEN {ra1} and {ra2})
-    AND ((p.value->>'dec')::float8 BETWEEN {dec1} and {dec2})
+	SELECT *
+	FROM PhotoObjAll_Other p
+	WHERE ((p.value->>'ra')::float8 BETWEEN  {ra1} and {ra2})
+	AND ((p.value->>'dec')::float8 BETWEEN  {dec1} and {dec2})
+	UNION ALL
+	SELECT p.KEY, p.value||pc.value
+	FROM (SELECT * FROM PhotoObjAll_Primary p WHERE ((p.value->>'ra')::float8 BETWEEN  {ra1} and {ra2})
+		AND ((p.value->>'dec')::float8 BETWEEN {dec1} and {dec2})
+			) p 
+			JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+	UNION ALL
+	SELECT g.KEY, g.value||gc.value AS value
+	FROM (SELECT * FROM PhotoObjAll_Galaxy p WHERE ((p.value->>'ra')::float8 BETWEEN  {ra1} and {ra2})
+	AND ((p.value->>'dec')::float8 BETWEEN  {dec1} and {dec2})
+		)g
+	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
+	) p
+	JOIN (
+		SELECT s.KEY, s.value||sc.value AS value
+		FROM (SELECT * FROM SpecObjAllComplementary s WHERE (s.value->>'scienceprimary')::int8=1) sc  
+			JOIN SpecObjAll s ON s.key=sc.key
+		) s ON p.key=(s.value->>'bestobjid')::int8
+    JOIN Platex pl ON pl.key=(s.value->>'plateid')::float8
     LIMIT 1
   params: ra_p,dec_p
 -

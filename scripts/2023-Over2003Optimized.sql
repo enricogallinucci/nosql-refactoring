@@ -61,18 +61,18 @@ LIMIT 1;
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
 SELECT ra, dec, dered_r, sz, pz
 FROM (
-	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (gc.value->>'dered_r')::float4 AS dered_r, g.value->'SpecObj'->>'z' AS sz, (g.value->'Photoz'->>'z')::float4 AS pz
+	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (gc.value->>'dered_r')::float8 AS dered_r, g.value->'SpecObj'->>'z' AS sz, (g.value->'Photoz'->>'z')::float8 AS pz
 	FROM PhotoObjAll_Galaxy as g 
 	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key 
 	WHERE g.key IN (1237645941824356443) --({objidlist})
 	UNION ALL
 	-- Galaxies that are primary objects
-	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (g.value->>'dered_r')::float4 AS dered_r, s.value->>'z' AS sz, (p.value->>'z')::float4 AS pz
+	SELECT g.value->>'ra' AS ra, g.value->>'dec' AS dec, (g.value->>'dered_r')::float8 AS dered_r, s.value->>'z' AS sz, (p.value->>'z')::float8 AS pz
 	FROM (
 				SELECT  pp.KEY, pp.value||pc.value AS value
 				FROM (SELECT * FROM PhotoObjAll_Primary WHERE key IN (1237645941824356443)) pp 
 					JOIN (SELECT * FROM PhotoObjAll_PrimaryComplementary WHERE key IN (1237645941824356443)) pc ON pp.KEY=pc.KEY
-				WHERE (pp.value->>'type')::int8=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
+				WHERE (pp.value->>'type')::int8=3 --AND (pc.value->>'type')::int8=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 					AND pp.key IN (1237645941824356443) --({objidlist})
 				) as g 
 		LEFT OUTER JOIN SpecObjAll s ON g.KEY=(s.value->>'bestobjid')::int8
@@ -224,7 +224,7 @@ FROM (
 	FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
 	  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
   ) _
-WHERE (value->'SpecObj'->>'plate')::int4=422 AND (value->'SpecObj'->>'mjd')::int4=51811 AND (value->'SpecObj'->>'fiberid')::int4=390;  -- (s.plate={plate} and s.mjd={mjd} and s.fiberid={fiberid})
+WHERE (value->'SpecObj'->>'plate')::int8=422 AND (value->'SpecObj'->>'mjd')::int8=51811 AND (value->'SpecObj'->>'fiberid')::int8=390;  -- (s.plate={plate} and s.mjd={mjd} and s.fiberid={fiberid})
 
 
 -- (0.0062)	select count(s.bestobjid) as count_returned_spec_phot from db_2023.photoobjall as p join db_2023.specobjall as s on s.bestobjid = p.objid join db_2023.platex as px on px.plateid = s.plateid where s.scienceprimary = 1 and s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2}
@@ -247,11 +247,11 @@ FROM (
 		FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
 		  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
 	  ) _
-	WHERE (value->'SpecObj'->>'scienceprimary')::int4=1
+	WHERE (value->'SpecObj'->>'scienceprimary')::int8=1
   	AND ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
   	AND ((value->>'dec')::float8 BETWEEN 15 AND 20)  -- (p.dec between {dec1} and {dec2}))
   ) s
-  JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plateid')::double precision;
+  JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plateid')::float8;
 
 -- (0.0061)	select s.instrument, s.bossspecobjid, px.seeing50, p.psffwhm_r, p.field, p.run, p.camcol, p.rowc_r, p.colc_r, p.rowc, p.colc, p.fracdev_r, p.devab_r, p.devphi_r, s.specobjid, s.bestobjid, p.objid, s.plate, s.fiberid, p.insidemask, p.flags, p.sky_r, p.petroflux_r, p.petrofluxivar_r, p.fiber2flux_r, p.petrorad_r, p.petroraderr_r, p.petror50_r, p.petror50err_r, p.petror90_r, p.petror90err_r, p.devrad_r, p.devraderr_r, p.devflux_r, p.devfluxivar_r, p.airmass_r, p.cloudcam_r, p.calibstatus_r, s.z, s.zerr, s.zwarning, s.class, s.z_noqso, s.zerr_noqso, s.zwarning_noqso, s.veldisp, s.veldisperr, s.veldispz, s.veldispzerr, s.veldispchi2, s.veldispnpix, s.veldispdof, s.snmedian_r, s.snmedian, s.chi68p, s.fracnsigma_1, s.fracnsighi_1, s.fracnsiglo_1, s.spectroflux_r, s.spectrosynflux_r, s.spectrofluxivar_r, s.spectrosynfluxivar_r, p.expflux_r, p.expab_r, p.exprad_r, p.expphi_r, p.psfflux_r from db_2023.photoobjall as p join db_2023.specobjall as s on s.bestobjid = p.objid join db_2023.platex as px on px.plateid = s.plateid where s.scienceprimary = 1 and s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2} limit 1
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
@@ -274,11 +274,11 @@ FROM (
 		FROM (SELECT * FROM PhotoObjAll_Galaxy g WHERE g.value->'SpecObj'->>'specobjid' IS NOT NULL) g
 		  JOIN SpecObjAll_Complementary sc ON g.key=(sc.value->>'bestobjid')::int8
 	  ) _
-	WHERE (value->'SpecObj'->>'scienceprimary')::int4=1
+	WHERE (value->'SpecObj'->>'scienceprimary')::int8=1
   	AND ((value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
   	AND ((value->>'dec')::float8 BETWEEN 15 AND 20)  -- (p.dec between {dec1} and {dec2}))
   ) s
-  JOIN Platex pl ON pl.key=(s.value->'SpecObj'->>'plateid')::double precision
+  JOIN Platex pl ON pl.key=(s.value->'SpecObj'->>'plateid')::float8
 LIMIT 1;
 
 -- (0.0162)	select r.run, r.rerun, r.camcol, r.field, f.fieldid, r.stripe, r.strip, r.ra, r.dec, r.ramin, r.ramax, r.decmin, r.decmax, r.mu, r.nu, r.incl, r.node, r.a, r.b, r.c, r.d, r.e, r.f, f.quality, f.a_u, f.b_u, f.c_u, f.d_u, f.e_u, f.f_u, f.a_g, f.b_g, f.c_g, f.d_g, f.e_g, f.f_g, f.a_r, f.b_r, f.c_r, f.d_r, f.e_r, f.f_r, f.a_i, f.b_i, f.c_i, f.d_i, f.e_i, f.f_i, f.a_z, f.b_z, f.c_z, f.d_z, f.e_z, f.f_z, f.fieldid from db_2023.frame r, db_2023.field f where f.fieldid=r.fieldid and r.fieldid in ({fieldidlist}) and r.zoom=0
