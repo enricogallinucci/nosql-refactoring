@@ -96,6 +96,13 @@ CREATE TABLE PhotoObjAll_Other AS (
 	WHERE (p.value->>'type')::int8<>3
 );
 ALTER TABLE PhotoObjAll_Other ADD PRIMARY KEY (key);
+
+DROP INDEX IF EXISTS idx_PhotoObjAll_Other_ra_dec;
+CREATE INDEX idx_PhotoObjAll_Other_ra_dec ON PhotoObjAll_Other(
+  CAST(value->>'ra' AS FLOAT8),
+  CAST(value->>'dec' AS FLOAT8)
+);
+
 ANALYZE PhotoObjAll_Other;
 
 -- This table contains SpecObjAll
