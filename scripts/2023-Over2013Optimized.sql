@@ -299,7 +299,8 @@ FROM (
 		SELECT * 
 		FROM PhotoObjAll_Primary p 
 		WHERE ((p.value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
-			AND ((p.value->>'dec')::float8 BETWEEN 15 AND 20) ) p -- (p.dec between {dec1} and {dec2}))
+			AND ((p.value->>'dec')::float8 BETWEEN 15 AND 20) -- (p.dec between {dec1} and {dec2}))
+			) p
 		JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
 	UNION ALL
 	SELECT g.KEY, (g.value-ARRAY['Photoz','PhotozRF'])::jsonb||gc.value AS value
@@ -307,7 +308,8 @@ FROM (
 		SELECT * 
 		FROM PhotoObjAll_Galaxy p 
 		WHERE ((p.value->>'ra')::float8 BETWEEN 15 AND 20) --((p.ra between {ra1} and {ra2}) and
-			AND ((p.value->>'dec')::float8 BETWEEN 15 AND 20)) g -- (p.dec between {dec1} and {dec2}))
+			AND ((p.value->>'dec')::float8 BETWEEN 15 AND 20) -- (p.dec between {dec1} and {dec2}))
+			) g
 	  JOIN PhotoObjAll_GalaxyComplementary gc ON g.KEY=gc.KEY
 	) p
 	JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
