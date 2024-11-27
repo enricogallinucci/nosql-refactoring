@@ -118,17 +118,14 @@ CREATE INDEX idx_SpecObjAll_ra_dec ON SpecObjAll(
   CAST(value->>'ra' AS FLOAT8),
   CAST(value->>'dec' AS FLOAT8)
 );
-
 DROP INDEX IF EXISTS idx_SpecObjAll_bestobjid;
 CREATE INDEX idx_SpecObjAll_bestobjid ON SpecObjAll(
   CAST(value->>'bestobjid' AS int8)
 );
-
 DROP INDEX IF EXISTS idx_SpecObjAll_plateid;
 CREATE INDEX idx_SpecObjAll_plateid ON SpecObjAll(
   CAST(value->>'plateid' AS float8)
 );
-
 ANALYZE SpecObjAll;
 
 -- This table contains all other attributes of SpecObjAll

@@ -225,12 +225,12 @@
       FROM (
     SELECT p.key, p.value||jsonb_build_object('SpecObj',jsonb_build_object('specobjid',s.key)||s.value) AS value
     FROM (
-              SELECT *
-        FROM PhotoObjAll_Other
-        UNION ALL
         SELECT p.KEY, p.value||pc.value AS value
         FROM PhotoObjAll_Primary p
-      JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+          JOIN PhotoObjAll_PrimaryComplementary pc ON p.KEY=pc.key
+        UNION ALL
+        SELECT *
+        FROM PhotoObjAll_Other
         ) p
     JOIN SpecObjAll s ON p.key=(s.value->>'bestobjid')::int8
     UNION ALL
