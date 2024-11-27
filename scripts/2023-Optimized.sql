@@ -101,7 +101,7 @@ ANALYZE PhotoObjAll_Other;
 -- This table contains SpecObjAll
 DROP TABLE IF EXISTS SpecObjAll;
 CREATE TABLE SpecObjAll AS (
-	SELECT s.KEY, jsonb_build_object('plateid', s.value->>'plateid', 'plate', s.value->>'plate', 'mjd', s.value->>'mjd', 'fiberid', s.value->>'fiberid', 'run2d', s.value->>'run2d', 'ra', s.value->>'ra', 'dec', s.value->>'dec', 'z', s.value->>'z', 'bestobjid', s.value->>'bestobjid') AS value
+	SELECT s.KEY, jsonb_build_object('scienceprimary', s.value->>'scienceprimary', 'plateid', s.value->>'plateid', 'plate', s.value->>'plate', 'mjd', s.value->>'mjd', 'fiberid', s.value->>'fiberid', 'run2d', s.value->>'run2d', 'ra', s.value->>'ra', 'dec', s.value->>'dec', 'z', s.value->>'z', 'bestobjid', s.value->>'bestobjid') AS value
 	FROM aa_SDSS2013_optimized.SpecObjAll s
 );
 ALTER TABLE SpecObjAll ADD PRIMARY KEY (key);
@@ -127,7 +127,7 @@ ANALYZE SpecObjAll;
 -- This table contains all other attributes of SpecObjAll
 DROP TABLE IF EXISTS SpecObjAllComplementary;
 CREATE TABLE SpecObjAllComplementary AS (
-	SELECT s.KEY, s.value-ARRAY['plateid', 'plate', 'mjd', 'fiberid', 'run2d', 'ra', 'dec', 'z'] AS value
+	SELECT s.KEY, s.value-ARRAY['scienceprimary', 'plateid', 'plate', 'mjd', 'fiberid', 'run2d', 'ra', 'dec', 'z'] AS value
 	FROM aa_SDSS2013_optimized.SpecObjAll s
 );
 ALTER TABLE SpecObjAllComplementary ADD PRIMARY KEY (key);
@@ -402,8 +402,8 @@ FROM (
 	) p
 	JOIN (
 		SELECT s.KEY, s.value||sc.value AS value
-		FROM (SELECT * FROM SpecObjAllComplementary s WHERE (s.value->>'scienceprimary')::int8=1) sc  
-			JOIN SpecObjAll s ON s.key=sc.key
+		FROM (SELECT * FROM SpecObjAll s WHERE (s.value->>'scienceprimary')::int8=1) s  
+			JOIN SpecObjAllComplementary sc ON s.key=sc.key
 		) s ON p.key=(s.value->>'bestobjid')::int8
   JOIN Platex pl ON pl.key=(s.value->>'plateid')::float8
 LIMIT 1;
