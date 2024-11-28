@@ -207,7 +207,7 @@
       JOIN SpecObjAllComplementary sc ON s.key=sc.key
       ) s ON p.key=(s.value->>'bestobjid')::int8
       JOIN Platex pl ON pl.key=(s.value->>'plateid')::float8
-      LIMIT 1
+#      LIMIT 1
     
   params: ra_p,dec_p
 -
