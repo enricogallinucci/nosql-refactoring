@@ -213,7 +213,7 @@
         AND ((value->>'ra')::float8 BETWEEN {ra1} and {ra2}) 
         AND ((value->>'dec')::float8 BETWEEN {dec1} and {dec2})
       ) s
-      JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plateid')::int8;
+      JOIN Platex p ON p.key=(s.value->'SpecObj'->>'plateid')::float8;
   params: ra_p,dec_p
 # SLOW
 -
