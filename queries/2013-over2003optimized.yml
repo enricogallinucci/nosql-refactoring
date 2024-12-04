@@ -34,15 +34,15 @@
             g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
             g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
     FROM (
-	SELECT  pp.KEY, pp.value||pc.value AS value
-	FROM PhotoObjAll_Primary pp  --({objidlist})
-	  JOIN photoobjall_primarycomplementary pc ON pp.KEY=pc.key
-	WHERE pp.key IN ({objidlist})
-            AND (pp.value->>'type')::int8=3 
-          ) as g 
-      JOIN Photoz as p ON g.key=p.key
-      JOIN PhotozRF pzr ON pzr.key=g.KEY
-    WHERE ((g.value->>'flags')::int8 & 262144) = 0
+    SELECT  pp.KEY, pp.value||pc.value AS value
+    FROM PhotoObjAll_Primary pp  --({objidlist})
+      JOIN photoobjall_primarycomplementary pc ON pp.KEY=pc.key
+    WHERE pp.key IN ({objidlist})
+              AND (pp.value->>'type')::int8=3 
+            ) as g 
+        JOIN Photoz as p ON g.key=p.key
+        JOIN PhotozRF pzr ON pzr.key=g.KEY
+      WHERE ((g.value->>'flags')::int8 & 262144) = 0
   params: objidlist
 -
   weight: 0.0547
