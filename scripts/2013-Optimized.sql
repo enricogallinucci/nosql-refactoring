@@ -215,7 +215,7 @@ SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>
 FROM PhotoObjAll_Galaxy p
 WHERE p.key IN (1237645941824356443) --({objidlist})
   AND (p.value->>'mode')::int8=1
-LIMIT 1;
+LIMIT 1 OFFSET 0;
 
 -- (1.33%)	SELECT p.objid, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u, p.g, p.r, p.i, p.z, p.Err_u, p.Err_g, p.Err_r, p.Err_i, p.Err_z FROM db_2013.photoprimary p WHERE p.objID in ({objidlist}) limit 50000
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
@@ -227,7 +227,7 @@ SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>
 FROM PhotoObjAll_Galaxy p
 WHERE p.key IN (1237645941824356443) --({objidlist})
   AND (p.value->>'mode')::int8=1
-LIMIT 50000;
+LIMIT 50000 OFFSET 0;
 
 -- (14.13%)	select g.objid, pz.z, pz.zerr, pzr.z, pzr.zerr, poa.u, poa.err_u, poa.g, poa.err_g, poa.r, poa.err_r, poa.i, poa.err_i, poa.z, poa.err_z from db_2013.galaxy as g join db_2013.photoz as pz on g.objid = pz.objid join db_2013.photozrf as pzr on g.objid = pzr.objid join db_2013.photoobjall as poa on g.objid = poa.objid where g.objid in ({objidlist}) and (g.flags & 262144) = 0
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
