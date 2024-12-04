@@ -90,15 +90,26 @@ WHERE (gc.value->>'mode')::int8=1
 
 -- (0.0616)	SELECT '<a target=info href=../../../en/tools/explore/obj.aspx?id=' || CAST(p.objid AS VARCHAR(20)) || '>' || CAST(p.objid AS VARCHAR(20)) || '</a>' AS objid, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u, p.g, p.r, p.i, p.z, p.err_u, p.err_g, p.err_r, p.err_i, p.err_z FROM db_2023.PhotoPrimary p WHERE p.objid IN ({objidlist}) LIMIT 1
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-FROM PhotoObjAll_Primary p 
-WHERE p.key IN (1237645941824356443) --({objidlist})
-UNION ALL
-SELECT g.key, g.value->>'run', g.value->>'rerun', g.value->>'camcol', g.value->>'field', g.value->>'obj', g.value->>'type', g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
-FROM PhotoObjAll_Galaxy g 
-	JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key
-WHERE (gc.value->>'mode')::int8=1
-  AND g.key IN (1237645941824356443) --({objidlist})
+SELECT *
+FROM (
+	SELECT *
+	FROM (
+		SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+		FROM PhotoObjAll_Primary p 
+		WHERE p.key IN (1237645941824356443) --({objidlist})
+		LIMIT 1
+		) _
+	UNION ALL
+	SELECT *
+	FROM (
+		SELECT g.key, g.value->>'run', g.value->>'rerun', g.value->>'camcol', g.value->>'field', g.value->>'obj', g.value->>'type', g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
+		FROM PhotoObjAll_Galaxy g 
+			JOIN PhotoObjAll_GalaxyComplementary gc ON g.key=gc.key
+		WHERE (gc.value->>'mode')::int8=1
+		  AND g.key IN (1237645941824356443) --({objidlist})
+		 LIMIT 1
+	 ) _
+  ) _
 LIMIT 1;
 
 -- (0.0903)	SELECT TO_CHAR(p.ra, 'FM999999990.00000000') AS ra, TO_CHAR(p.dec, 'FM999999990.00000000') AS dec, p.dered_r, COALESCE(TO_CHAR(s.z, 'FM9990.0000'), '-9999') AS z, COALESCE(TO_CHAR(pz1.z, 'FM9990.0000'), '-9999') AS pzz1 FROM db_2023.galaxy AS p LEFT OUTER JOIN db_2023.specobj AS s ON s.bestobjid = p.objid LEFT OUTER JOIN db_2023.photoz AS pz1 ON pz1.objid = p.objid WHERE p.dered_r < {dered_r2} AND p.dered_r > {dered_r1} AND pz1.z < {z2} AND pz1.z > {z1} AND p.objid IN ({objidlist})

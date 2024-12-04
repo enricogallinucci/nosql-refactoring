@@ -207,15 +207,23 @@ ANALYZE GalSpecIndx;
 --*********************************************************** Queries *************************************************************************
 -- (10.66%)	SELECT p.objId, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u, p.g, p.r, p.i, p.z, p.Err_u, p.Err_g, p.Err_r, p.Err_i, p.Err_z FROM db_2013.PhotoPrimary p WHERE p.objID in ({objidlist}) LIMIT 1;
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-FROM PhotoObjAll_Primary p
-WHERE p.key IN (1237645941824356443) --({objidlist})
-UNION ALL
-SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-FROM PhotoObjAll_Galaxy p
-WHERE p.key IN (1237645941824356443) --({objidlist})
-  AND (p.value->>'mode')::int8=1
-LIMIT 1 OFFSET 0;
+SELECT *
+FROM (
+	SELECT *
+	FROM (SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+		FROM PhotoObjAll_Primary p
+		WHERE p.key IN (1237645941824356443) --({objidlist})
+		LIMIT 1 OFFSET 0) _
+	UNION ALL
+	SELECT *
+	FROM (SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+		FROM PhotoObjAll_Galaxy p
+		WHERE p.key IN (1237645941824356443) --({objidlist})
+	  	AND (p.value->>'mode')::int8=1
+		LIMIT 1 OFFSET 0) _
+		) _
+LIMIT 1
+;
 
 -- (1.33%)	SELECT p.objid, p.run, p.rerun, p.camcol, p.field, p.obj, p.type, p.ra, p.dec, p.u, p.g, p.r, p.i, p.z, p.Err_u, p.Err_g, p.Err_r, p.Err_i, p.Err_z FROM db_2013.photoprimary p WHERE p.objID in ({objidlist}) limit 50000
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
