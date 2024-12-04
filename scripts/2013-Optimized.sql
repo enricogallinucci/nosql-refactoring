@@ -237,7 +237,7 @@ SELECT g.key,
 				g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
 				g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z'
 FROM PhotoObjAll_Galaxy g 
-WHERE g.key IN (1237645941824356443); --({objidlist})
+WHERE g.key IN (1237648703525224703); --({objidlist})
 
 
 -- (5.47%)	select * from db_2013.specobjall where specobjid = {specobjid}

@@ -26,7 +26,7 @@
       JOIN PhotozRF pzr ON pzr.key=g.KEY
       JOIN PhotoObjAll_GalaxyComplementary gc ON gc.key=g.key
     WHERE g.key IN ({objidlist})
-      AND ((g.value->>'flags')::int8 & 262144) = 0
+      AND ((gc.value->>'flags')::int8 & 262144) = 0
     UNION ALL
     SELECT g.key,
             p.value->>'z', p.value->>'zerr', 
@@ -34,9 +34,10 @@
             g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
             g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
     FROM (
-          SELECT  pp.KEY, pp.value
-          FROM PhotoObjAll_Primary pp
-          WHERE key IN ({objidlist})
+	SELECT  pp.KEY, pp.value||pc.value AS value
+	FROM PhotoObjAll_Primary pp  --({objidlist})
+	  JOIN photoobjall_primarycomplementary pc ON pp.KEY=pc.key
+	WHERE pp.key IN ({objidlist})
             AND (pp.value->>'type')::int8=3 
           ) as g 
       JOIN Photoz as p ON g.key=p.key

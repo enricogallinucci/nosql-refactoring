@@ -65,8 +65,8 @@ SELECT g.key,
 FROM PhotoObjAll_Galaxy as g 
 	JOIN PhotozRF pzr ON pzr.key=g.KEY
 	JOIN PhotoObjAll_GalaxyComplementary gc ON gc.key=g.key
-WHERE g.key IN (1237674649922306099) --({objidlist})
-	AND ((g.value->>'flags')::int8 & 262144) = 0
+WHERE g.key IN (1237648703525224703) --({objidlist})
+	AND ((gc.value->>'flags')::int8 & 262144) = 0
 UNION ALL
 -- Galaxies that are primary objects
 SELECT g.key,
@@ -75,9 +75,10 @@ SELECT g.key,
 				g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
 				g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
 FROM (
-			SELECT  pp.KEY, pp.value
+			SELECT  pp.KEY, pp.value||pc.value AS value
 			FROM PhotoObjAll_Primary pp  --({objidlist})
-			WHERE key IN (1237674649922306099)
+			  JOIN photoobjall_primarycomplementary pc ON pp.KEY=pc.key
+			WHERE pp.key IN (1237648703525224703)
 			  AND (pp.value->>'type')::int4=3 --AND (pc.value->>'type')::int4=3 --class='GALAXY' (see https://skyserver.sdss.org/dr1/en/help/browser/browser.asp)
 			) as g 
 	JOIN Photoz as p ON g.key=p.key
