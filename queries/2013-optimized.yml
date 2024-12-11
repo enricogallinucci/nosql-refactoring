@@ -3,19 +3,19 @@
   query: |
     SELECT *
     FROM (
-	SELECT *
-	FROM (SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-	  FROM PhotoObjAll_Primary p
-	  WHERE p.key IN ({objidlist})
-	  LIMIT 1) _
-	UNION ALL
-	SELECT *
-	FROM (SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-	  FROM PhotoObjAll_Galaxy p
-	  WHERE p.key IN ({objidlist})
-	    AND (p.value->>'mode')::int8=1
-	  LIMIT 1) _
-	) _
+      SELECT *
+      FROM (SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+        FROM PhotoObjAll_Primary p
+        WHERE p.key IN ({objidlist})
+        LIMIT 1) _
+      UNION ALL
+      SELECT *
+      FROM (SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+        FROM PhotoObjAll_Galaxy p
+        WHERE p.key IN ({objidlist})
+          AND (p.value->>'mode')::int8=1
+        LIMIT 1) _
+      ) _
     LIMIT 1
   params: objidlist
 -

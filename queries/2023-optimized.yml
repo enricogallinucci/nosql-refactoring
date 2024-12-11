@@ -15,23 +15,23 @@
   query: |
     SELECT *
     FROM (
-	SELECT *
-	FROM (
-		SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
-		FROM PhotoObjAll_Primary p 
-		WHERE p.key IN ({objidlist})
-		LIMIT 1
-		)_
-	UNION ALL
-	SELECT *
-	FROM (
-		SELECT g.key, g.value->>'run', g.value->>'rerun', g.value->>'camcol', g.value->>'field', g.value->>'obj', g.value->>'type', g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
-		FROM PhotoObjAll_Galaxy g 
-		WHERE (g.value->>'mode')::int8=1
-		  AND g.key IN ({objidlist})
-		LIMIT 1
-	  ) _
-      ) _
+      SELECT *
+      FROM (
+        SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+        FROM PhotoObjAll_Primary p 
+        WHERE p.key IN ({objidlist})
+        LIMIT 1
+        )_
+      UNION ALL
+      SELECT *
+      FROM (
+        SELECT g.key, g.value->>'run', g.value->>'rerun', g.value->>'camcol', g.value->>'field', g.value->>'obj', g.value->>'type', g.value->>'ra', g.value->>'dec', g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z', g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z' 
+        FROM PhotoObjAll_Galaxy g 
+        WHERE (g.value->>'mode')::int8=1
+          AND g.key IN ({objidlist})
+        LIMIT 1
+        ) _
+          ) _
     LIMIT 1
   params: objidlist
 -
