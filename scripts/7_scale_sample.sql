@@ -153,9 +153,9 @@ BEGIN
 					JOIN %I.mapping m ON x.objid = m.objid_orig', dupl_schema_name, all_columns, dupl_schema_name);
 
     -- Step 14: copy/paste other tables: field, frame, platex
-    EXECUTE format('CREATE TABLE %I.field AS SELECT * FROM sdss_relational2.field');
-    EXECUTE format('CREATE TABLE %I.frame AS SELECT * FROM sdss_relational2.frame');
-    EXECUTE format('CREATE TABLE %I.platex AS SELECT * FROM sdss_relational2.platex');
+    EXECUTE format('CREATE TABLE %I.field AS SELECT * FROM sdss_relational2.field', dupl_schema_name);
+    EXECUTE format('CREATE TABLE %I.frame AS SELECT * FROM sdss_relational2.frame', dupl_schema_name);
+    EXECUTE format('CREATE TABLE %I.platex AS SELECT * FROM sdss_relational2.platex', dupl_schema_name);
 
     RAISE NOTICE 'Schema % created successfully.', dupl_schema_name;
 
