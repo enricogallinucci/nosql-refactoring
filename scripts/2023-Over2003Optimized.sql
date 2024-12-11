@@ -229,7 +229,7 @@ WHERE (value->'SpecObj'->>'plate')::int8=422 AND (value->'SpecObj'->>'mjd')::int
 
 -- (0.0062)	select count(s.bestobjid) as count_returned_spec_phot from db_2023.photoobjall as p join db_2023.specobjall as s on s.bestobjid = p.objid join db_2023.platex as px on px.plateid = s.plateid where s.scienceprimary = 1 and s.ra between {ra1} and {ra2} and s.dec between {dec1} and {dec2}
 EXPLAIN (ANALYZE TRUE, COSTS FALSE, SUMMARY true)
-SELECT count(s.value->'SpecObj'->>'s.bestobjid')
+SELECT count(s.value->'SpecObj'->>'bestobjid')
 FROM (
   SELECT *
   FROM (

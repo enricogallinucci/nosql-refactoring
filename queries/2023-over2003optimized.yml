@@ -191,7 +191,7 @@
 -
   weight: 0.0062
   query: |
-    SELECT count(s.value->'SpecObj'->>'s.bestobjid')
+    SELECT count(s.value->'SpecObj'->>'bestobjid')
     FROM (
       SELECT *
       FROM (
