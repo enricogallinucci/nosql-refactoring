@@ -1,0 +1,75 @@
+-
+  weight: 0.1066
+  query: |
+    SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+    FROM PhotoObjAll p 
+    WHERE (p.value->>'mode')::int8=1
+	AND p.key IN ({objidlist})
+    LIMIT 1
+  params: objidlist
+-
+  weight: 0.0133
+  query: |
+    SELECT p.key, p.value->>'run', p.value->>'rerun', p.value->>'camcol', p.value->>'field', p.value->>'obj', p.value->>'type', p.value->>'ra', p.value->>'dec', p.value->>'u', p.value->>'g', p.value->>'r', p.value->>'i', p.value->>'z', p.value->>'err_u', p.value->>'err_g', p.value->>'err_r', p.value->>'err_i', p.value->>'err_z' 
+    FROM PhotoObjAll p 
+    WHERE (p.value->>'mode')::int8=1
+	AND p.key IN ({objidlist})
+    LIMIT 50000
+  params: objidlist
+-
+  weight: 0.1413
+  query: |
+    SELECT g.key,
+	p.value->>'z', p.value->>'zerr', 
+	pzr.value->>'z', pzr.value->>'zerr', 
+	g.value->>'u', g.value->>'g', g.value->>'r', g.value->>'i', g.value->>'z',
+	g.value->>'err_u', g.value->>'err_g', g.value->>'err_r', g.value->>'err_i', g.value->>'err_z'
+    FROM PhotoObjAll as g 
+	JOIN PhotozRF pzr ON pzr.key=g.KEY
+	JOIN Photoz as p ON g.key=p.key
+    WHERE (g.value->>'type')::int8=3
+      AND ((g.value->>'flags')::int8 & 262144) = 0
+      AND g.key IN ({objidlist})
+  params: objidlist
+-
+  weight: 0.0547
+  query: |
+    SELECT *
+    FROM SpecObjAll s1
+    WHERE s1.key = {specobjid} 
+  params: specobjid
+-
+  weight: 0.0468
+  query: |
+    SELECT p.key, p.value 
+    FROM Photoz p
+    WHERE p.key = {objid}
+  params: objid
+-
+  weight: 0.1078
+  query: |
+    SELECT p.key, p.value 
+    FROM PhotoObjAll p
+    WHERE p.key = {objid}
+  params: objid
+-
+  weight: 0.0349
+  query: |
+    SELECT *
+    FROM Frame
+    WHERE key1 = {fieldid}
+  params: fieldid
+-
+  weight: 0.0263
+  query: |
+    SELECT *
+    FROM Field
+    WHERE key = {fieldid}
+  params: fieldid
+-
+  weight: 0.0273
+  query: |
+    SELECT *
+    FROM GalSpecIndx
+    WHERE key = {specobjid}
+  params: specobjid
