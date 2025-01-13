@@ -1,5 +1,3 @@
--- 2023
-
 -- top 10 cast(rand(ra)*1000000 as int) % 100
 
 -- CALCULATE SAMPLE SIZE BY MODE AND TYPE
