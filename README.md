@@ -5,6 +5,10 @@ A work by Enrico Gallinucci<sup>1</sup>,  Matteo Golfarelli<sup>1</sup>, Wafaa R
 2. Jawwal Telecommunications, Ramallah, Palestine
 3. Universitat Politècnica de Catalunya, Barcelona, Spain
 
+## Reference
+
+Enrico Gallinucci,  Matteo Golfarelli, Wafaa Radwan, Gabriel Zarate, Alberto Abelló. <i>Impact study of NoSQL refactoring in SkyServer database</i>. Proceedings of the 27th International Workshop on Design, Optimization, Languages and Analytical Processing of Big Data (DOLAP) co-located with EDBT/ICDT 2025, Barcelona, Spain, March 25, 2025. To appear.
+
 ## Outline
 
 The `queries` folder contains all queries in YML files; for each workload, a list of queries is reported indicating the weight (i.e., the frequency), the SQL code, and the list of parameters that must be dynamically generated to execute the query.
