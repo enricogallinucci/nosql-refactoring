@@ -1,48 +1,38 @@
 import time
+import json
+import sys
+from pathlib import Path
 import networkx as nx
 import matplotlib
 matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
-nodes = [
-    (0,  {"kind": "Phantom",    "descr": "Start",                             "duration": 0}),
-    (1,  {"kind": "Migration",  "descr": "PhotoObjAll_Galaxy",                "duration": 119.47}),
-    # (2,  {"kind": "Migration",  "descr": "PhotoObjAll_GalaxyComplementary",   "duration": 94.22}),
-    (3,  {"kind": "Migration",  "descr": "PhotoObjAll_Primary",               "duration": 18.11}),
-    # (4,  {"kind": "Migration",  "descr": "PhotoObjAll_PrimaryComplementary",  "duration": 177.99}),
-    (5,  {"kind": "Migration",  "descr": "PhotoObjAll_Other",                 "duration": 237.49}),
-    (6,  {"kind": "Migration",  "descr": "SpecObjAll",                        "duration": 34.74}),
-    (7,  {"kind": "Migration",  "descr": "Photoz",                            "duration": 0.3}),
-    # (8,  {"kind": "Migration",  "descr": "Photoz_Complementary",              "duration": 15.82}),
-    # (9,  {"kind": "Migration",  "descr": "PhotozRF",                          "duration": 1.3}),
-    # (10, {"kind": "Migration",  "descr": "PhotozRF_Complementary",            "duration": 5.36}),
-    (21, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.1066, "time_before": 0.000000533299, "time_after": 0.00000079132}),
-    (22, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0133, "time_before": 7.473494, "time_after": 17.310399}),
-    (23, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.1413, "time_before": 448.062937, "time_after": 8.512533}),
-    (24, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0547, "time_before": 1.176855, "time_after": 1.145305}),
-    (25, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0468, "time_before": 0.000000026124, "time_after": 2.026613}),
-    (26, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.1078, "time_before": 2.087132, "time_after": 3.454291}),
-    # (27, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0349, "time_before": 0, "time_after": 0}),
-    # (28, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0263, "time_before": 0, "time_after": 0}),
-    # (29, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0273, "time_before": 0, "time_after": 0}),
-    (99, {"kind": "Phantom",    "descr": "End",                               "duration": 0})
-]
 
-edges = [
-    (0, 1), (0, 3), (0, 5), (0, 6), (0, 7),
-    #(0, 2), (0, 4), (0, 8), (0, 9), (0, 10),
-    (1, 21), (3, 21),
-    (1, 22), (3, 22),
-    (1, 23),
-    (6, 24),
-    (1, 25), (7, 25),
-    (1, 26), (3, 26), (5, 26),
-    (21, 99), (22, 99), (23, 99), (24, 99), (25, 99), (26, 99), #(27, 99), (28, 99), (29, 99),
-    #(2, 99), (4, 99), (8, 99), (9, 99), (10, 99)
-]
+G = nx.DiGraph()
+benefit = 0
+enabled = 0
+best = 0
+worse = 0
+best_plan = [0]
+worse_plan = [0]
 
 
-def show_graph(G):
+def load_graph(file_path) -> None:
+    global G
+
+    # Open and load the JSON file
+    with open(file_path, 'r') as f:
+        graph_elements = json.load(f)
+        nodes = [tuple(item) for item in graph_elements.get('nodes')]
+        edges = [tuple(item) for item in graph_elements.get('edges')]
+
+    add_benefit_to_nodes(nodes)
+
+    G.add_nodes_from(nodes)
+    G.add_edges_from(edges)
+
+
+def show_graph():
     nx.draw_shell(G, with_labels=True, font_weight='bold')
     plt.show()
 
@@ -55,9 +45,9 @@ def add_benefit_to_nodes(nodes):
 
 def get_ready_nodes(nodes, visited) -> list[int]:
     ready = []
-    for node in nodes:
-        if node[0] not in visited and all([n in visited for n in G.predecessors(node[0])]):
-            ready.append(node[0])
+    for i in nodes:
+        if i not in visited and all([n in visited for n in G.predecessors(i)]):
+            ready.append(i)
     return ready
 
 
@@ -110,24 +100,16 @@ def exhaustive_search(plan, ready):
 
 
 if __name__ == '__main__':
-    add_benefit_to_nodes(nodes)
+    if len(sys.argv) < 2:
+        print("Error: Input filename required as a parameter")
+        exit(1)
 
-    G = nx.DiGraph()
-    G.add_nodes_from(nodes)
-    G.add_edges_from(edges)
+    load_graph(Path("inputs").joinpath(sys.argv[1]))
 
     plan = [0]
-    ready = get_ready_nodes(nodes, plan)
-    solution = []
-    benefit = 0
-    enabled = 0
-    best = 0
-    worse = 0
-    best_plan = [0]
-    worse_plan = [0]
 
     start = time.time()
-    exhaustive_search(plan, ready)
+    exhaustive_search(plan, get_ready_nodes(G.nodes, plan))
     end = time.time()
 
     print(f"Elapsed time: {(end - start):.2f} seconds")
