@@ -7,11 +7,11 @@
     [6,  {"kind": "Migration",  "descr": "SpecObjAll",                        "duration": 34.74}],
     [7,  {"kind": "Migration",  "descr": "Photoz",                            "duration": 0.3}],
     [21, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.1066, "time_before": 0.000000533299, "time_after": 0.00000079132}],
-    [22, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0133, "time_before": 7.473494, "time_after": 17.310399}],
-    [23, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.1413, "time_before": 448.062937, "time_after": 8.512533}],
-    [24, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0547, "time_before": 1.176855, "time_after": 1.145305}],
-    [25, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0468, "time_before": 0.000000026124, "time_after": 2.026613}],
-    [26, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.1078, "time_before": 2.087132, "time_after": 3.454291}],
+    [22, {"kind": "Query",      "descr": "Q2",                                "duration": 0, "weight": 0.0133, "time_before": 7.473494, "time_after": 17.310399}],
+    [23, {"kind": "Query",      "descr": "Q3",                                "duration": 0, "weight": 0.1413, "time_before": 448.062937, "time_after": 8.512533}],
+    [24, {"kind": "Query",      "descr": "Q4",                                "duration": 0, "weight": 0.0547, "time_before": 1.176855, "time_after": 1.145305}],
+    [25, {"kind": "Query",      "descr": "Q5",                                "duration": 0, "weight": 0.0468, "time_before": 0.000000026124, "time_after": 2.026613}],
+    [26, {"kind": "Query",      "descr": "Q6",                                "duration": 0, "weight": 0.1078, "time_before": 2.087132, "time_after": 3.454291}],
     [99, {"kind": "Phantom",    "descr": "End",                               "duration": 0}]
   ],
   "__ignored_nodes": [
@@ -20,9 +20,9 @@
     [8,  {"kind": "Migration",  "descr": "Photoz_Complementary",              "duration": 15.82}],
     [9,  {"kind": "Migration",  "descr": "PhotozRF",                          "duration": 1.3}],
     [10, {"kind": "Migration",  "descr": "PhotozRF_Complementary",            "duration": 5.36}],
-    [27, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0349, "time_before": 0, "time_after": 0}],
-    [28, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0263, "time_before": 0, "time_after": 0}],
-    [29, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 0.0273, "time_before": 0, "time_after": 0}]
+    [27, {"kind": "Query",      "descr": "Q7",                                "duration": 0, "weight": 0.0349, "time_before": 0, "time_after": 0}],
+    [28, {"kind": "Query",      "descr": "Q8",                                "duration": 0, "weight": 0.0263, "time_before": 0, "time_after": 0}],
+    [29, {"kind": "Query",      "descr": "Q9",                                "duration": 0, "weight": 0.0273, "time_before": 0, "time_after": 0}]
   ],
 
   "edges": [

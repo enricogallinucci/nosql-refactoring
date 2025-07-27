@@ -12,7 +12,7 @@ G = nx.DiGraph()
 benefit = 0
 enabled = 0
 best = 0
-worse = 0
+worse = 999999999
 best_plan = [0]
 worse_plan = [0]
 
@@ -62,41 +62,52 @@ def get_benefit_of_plan(plan) -> float:
     return benefit
 
 
-def exhaustive_search(plan, ready):
+def update_benefit_of_plan(nodes: list[int], sign: int):
     global benefit
     global enabled
+    for i in nodes:
+        if G.nodes[i]["kind"] == "Query":
+            enabled += sign * G.nodes[i]["benefit"]
+        elif G.nodes[i]["kind"] == "Migration":
+            benefit += sign * G.nodes[i]["duration"] * enabled
+
+
+def exhaustive_search(plan, ready):
+    global benefit
     global best, best_plan
     global worse, worse_plan
 
-    if 99 in ready:
+    # Add all queries to the plan at once (no need for backtracking)
+    ready_queries = [i for i in ready if G.nodes[i]["kind"] == "Query"]
+    plan.extend(ready_queries)
+    update_benefit_of_plan(ready_queries, sign=+1)
+    # Add migrations one at a time (with backtracking)
+    ready_migrations = [i for i in ready if G.nodes[i]["kind"] == "Migration"]
+    if not ready_migrations:
         if benefit > best:
             best, best_plan = benefit, plan.copy()
         if benefit < worse:
             worse, worse_plan = benefit, plan.copy()
         #print("Plan found:", plan, benefit)
     else:
-        for i in range(len(ready)):
-            current = ready[i]
+        for current in ready_migrations:
             plan.append(current)
-            # Increase the benefit up to now
-            if G.nodes[current]["kind"] == "Query":
-                enabled += G.nodes[current]["benefit"]
-            elif G.nodes[current]["kind"] == "Migration":
-                benefit += G.nodes[current]["duration"] * enabled
+            # Increase the benefit of the current migration
+            update_benefit_of_plan([current], sign=+1)
             # Add new nodes that became ready
-            next_ready = [n for n in ready if n != current]
+            next_ready = [n for n in ready_migrations if n != current]
             for j in G.successors(current):
                 if j not in plan and all([n in plan for n in G.predecessors(j)]):
                     next_ready.append(j)
             # Recursive call
             exhaustive_search(plan, next_ready)
-            # Remove the benefit
-            if G.nodes[current]["kind"] == "Query":
-                enabled -= G.nodes[current]["benefit"]
-            elif G.nodes[current]["kind"] == "Migration":
-                benefit -= G.nodes[current]["duration"] * enabled
-            # Remove the node from the plan
+            # Remove the benefit of the current migration
+            update_benefit_of_plan([current], sign=-1)
+            # Remove the migration node from the plan
             plan.pop()
+    # Remove the query nodes from the plan
+    update_benefit_of_plan(ready_queries, sign=-1)
+    _ = [plan.pop() for _ in range(len(ready_queries))]
 
 
 if __name__ == '__main__':
