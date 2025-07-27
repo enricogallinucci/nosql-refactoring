@@ -177,7 +177,9 @@ def greedy_search(plan, ready, plan_tail):
             h = 0
             related_benefit = 0
             for q in G.nodes[node]["impacted_queries"]:
-                h += pending_duration * G.nodes[q]["benefit"] * (G.nodes[node]["duration"] / G.nodes[q]["cumulative_duration"])
+                if G.nodes[q]["benefit"] > 0:
+                    related_benefit += G.nodes[q]["benefit"]
+                    h += pending_duration * G.nodes[q]["benefit"] * (G.nodes[node]["duration"] / G.nodes[q]["cumulative_duration"])
             h -= (pending_benefit - related_benefit) * G.nodes[node]["duration"]
             heuristics.append(h)
         current = ready_migrations[heuristics.index(max(heuristics))]
@@ -213,4 +215,3 @@ if __name__ == '__main__':
     greedy_search([0], get_ready_nodes(G.nodes, [0]), [])
     end = time.time()
     print(f"{steps} search steps executed in {(end - start):.2f} seconds")
-
