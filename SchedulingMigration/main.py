@@ -15,6 +15,7 @@ best = 0
 worse = 999999999
 best_plan = [0]
 worse_plan = [0]
+steps = 0
 
 
 def load_graph(file_path) -> None:
@@ -72,22 +73,28 @@ def update_benefit_of_plan(nodes: list[int], sign: int):
             benefit += sign * G.nodes[i]["duration"] * enabled
 
 
-def exhaustive_search(plan, ready):
+def exhaustive_search(plan, ready, plan_tail):
+    global steps
     global benefit
     global best, best_plan
     global worse, worse_plan
 
+    steps += 1
+
     # Add all queries to the plan at once (no need for backtracking)
-    ready_queries = [i for i in ready if G.nodes[i]["kind"] == "Query"]
+    ready_queries = [i for i in ready if G.nodes[i]["kind"] == "Query" and G.nodes[i]["benefit"] > 0]
+    plan_tail.extend([i for i in ready if G.nodes[i]["kind"] == "Query" and G.nodes[i]["benefit"] <= 0])
     plan.extend(ready_queries)
     update_benefit_of_plan(ready_queries, sign=+1)
     # Add migrations one at a time (with backtracking)
     ready_migrations = [i for i in ready if G.nodes[i]["kind"] == "Migration"]
     if not ready_migrations:
+        plan.extend(plan_tail)
         if benefit > best:
             best, best_plan = benefit, plan.copy()
         if benefit < worse:
             worse, worse_plan = benefit, plan.copy()
+        _ = [plan.pop() for _ in range(len(plan_tail))]
         #print("Plan found:", plan, benefit)
     else:
         for current in ready_migrations:
@@ -100,7 +107,7 @@ def exhaustive_search(plan, ready):
                 if j not in plan and all([n in plan for n in G.predecessors(j)]):
                     next_ready.append(j)
             # Recursive call
-            exhaustive_search(plan, next_ready)
+            exhaustive_search(plan, next_ready, plan_tail.copy())
             # Remove the benefit of the current migration
             update_benefit_of_plan([current], sign=-1)
             # Remove the migration node from the plan
@@ -117,13 +124,11 @@ if __name__ == '__main__':
 
     load_graph(Path("inputs").joinpath(sys.argv[1]))
 
-    plan = [0]
-
     start = time.time()
-    exhaustive_search(plan, get_ready_nodes(G.nodes, plan))
+    exhaustive_search([0], get_ready_nodes(G.nodes, [0]), [])
     end = time.time()
 
-    print(f"Elapsed time: {(end - start):.2f} seconds")
+    print(f"{steps} search steps executed in {(end - start):.2f} seconds")
 
     print(f"Best plan: {best_plan} -> {best:.2f}")
     print(f"Worse plan: {worse_plan} -> {worse:.2f}")
