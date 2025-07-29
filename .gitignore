@@ -3,3 +3,4 @@ data/*
 results/**/*.csv
 scripts/__pycache__/*
 results/tmp/*
+.vscode/
