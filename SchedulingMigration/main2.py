@@ -22,8 +22,7 @@ def add_benefit_to_nodes():
     for current in G.nodes:
         node = G.nodes[current]
         if node["kind"] == "Query":
-            # node["benefit"] = node["weight"] * (node["time_before"] - node["time_after"])
-            node["benefit"] = node["time_before"] - node["time_after"]
+            node["benefit"] = node["weight"] * (node["time_before"] - node["time_after"])
 
 def load_graph(file_path) -> None:
     global G
