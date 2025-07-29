@@ -12,9 +12,9 @@ G = nx.DiGraph()
 benefit = 0
 enabled = 0
 best = 0
-worse = 999999999
+worst = 999999999
 best_plan = [0]
-worse_plan = [0]
+worst_plan = [0]
 
 
 def add_benefit_to_nodes():
@@ -112,7 +112,7 @@ def exhaustive_search(plan, ready, plan_tail):
     global steps
     global benefit
     global best, best_plan
-    global worse, worse_plan
+    global worst, worst_plan
 
     steps += 1
 
@@ -127,10 +127,10 @@ def exhaustive_search(plan, ready, plan_tail):
         plan.extend(plan_tail)
         if benefit > best:
             best, best_plan = benefit, plan.copy()
-        if benefit < worse:
-            worse, worse_plan = benefit, plan.copy()
+        if benefit < worst:
+            worst, worst_plan = benefit, plan.copy()
         _ = [plan.pop() for _ in range(len(plan_tail))]
-        #print("Plan found:", plan, benefit)
+        print("Plan found:", plan, benefit)
     else:
         for current in ready_migrations:
             plan.append(current)
@@ -167,7 +167,7 @@ def greedy_search(plan, ready, plan_tail):
     ready_migrations = [i for i in ready if G.nodes[i]["kind"] == "Migration"]
     if not ready_migrations:
         plan.extend(plan_tail)
-        print(f"Worse plan: {plan} -> {benefit:.2f}")
+        print(f"Worst plan: {plan} -> {benefit:.2f}")
     else:
         add_cumulative_duration_to_nodes(plan.copy())
         heuristics = []
@@ -200,14 +200,14 @@ if __name__ == '__main__':
         print("Error: Input filename required as a parameter")
         exit(1)
 
-    load_graph(Path("inputs").joinpath(sys.argv[1]))
+    load_graph(Path("SchedulingMigration/inputs").joinpath(sys.argv[1]))
 
     steps = 0
     start = time.time()
     exhaustive_search([0], get_ready_nodes(G.nodes, [0]), [])
     end = time.time()
     print(f"Best plan: {best_plan} -> {best:.2f}")
-    print(f"Worse plan: {worse_plan} -> {worse:.2f}")
+    print(f"Worst plan: {worst_plan} -> {worst:.2f}")
     print(f"{steps} search steps executed in {(end - start):.2f} seconds")
 
     steps = 0
