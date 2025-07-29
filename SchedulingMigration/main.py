@@ -130,7 +130,7 @@ def exhaustive_search(plan, ready, plan_tail):
         if benefit < worst:
             worst, worst_plan = benefit, plan.copy()
         _ = [plan.pop() for _ in range(len(plan_tail))]
-        print("Plan found:", plan, benefit)
+        # print("Plan found:", plan, benefit)
     else:
         for current in ready_migrations:
             plan.append(current)
