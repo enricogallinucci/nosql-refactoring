@@ -6,7 +6,7 @@ SELECT g.key, jsonb_build_object(
 				'Photoz', jsonb_build_object('z', g.value->'Photoz'->>'z', 'zerr', g.value->'Photoz'->>'zerr'), 
 				'PhotozRF', jsonb_build_object('z', pzr.value->>'z', 'zerr', pzr.value->>'zerr'), 
 				'u', g.value->>'u', 'g', g.value->>'g', 'r', g.value->>'r', 'i', g.value->>'i', 'z', g.value->>'z', 'ra', g.value->>'ra', 'dec', g.value->>'dec',
-				'err_u', gc.value->>'err_u', 'err_g', gc.value->>'err_g', 'err_r', gc.value->>'err_r', 'err_i', gc.value->>'err_i', 'err_z', gc.value->>'err_z') AS value 
+				'err_u', gc.value->>'err_u', 'err_g', gc.value->>'err_g', 'err_r', gc.value->>'err_r', 'err_i', gc.value->>'err_i', 'err_z', gc.value->>'err_z') AS value  -- ADD MISSING ATTRIBUTES
 FROM aa_SDSS2003_optimized.PhotoObjAll_Galaxy as g 
 	JOIN aa_SDSS2003_optimized.PhotozRF pzr ON pzr.key=g.KEY
 	JOIN aa_SDSS2003_optimized.PhotoObjAll_GalaxyComplementary gc ON gc.key=g.key

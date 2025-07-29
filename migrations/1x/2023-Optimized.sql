@@ -149,6 +149,8 @@ CREATE TABLE PhotozComplementary AS (
 ALTER TABLE PhotozComplementary ADD PRIMARY KEY (key);
 ANALYZE PhotozComplementary;
 
+-- MISSING OLD PHOTOZ_COMPLEMENTARY
+
 DROP TABLE IF EXISTS Frame_0;
 CREATE TABLE Frame_0 AS (
 SELECT fr.key1, fr.key2, fr.value||jsonb_build_object('Field', fi.value) AS value
