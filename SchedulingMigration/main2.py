@@ -11,8 +11,8 @@ import copy
 G = nx.DiGraph()
 benefit = 0
 enabled = 0
-best = 0
-worst = 999999999
+best_benefit = 0
+worst_benefit = 999999999
 best_plan = [0]
 worst_plan = [0]
 query_frequency_in_workload = 0
@@ -66,7 +66,7 @@ def exhaustive_search(plan, mq):
     
     if addPlan:
         global plans
-        plan["time_to_compensate_migration"] = plan["duration"]*query_frequency_in_workload*1000/plan["benefit"] if plan["benefit"] > 0 else worst
+        plan["time_to_compensate_migration"] = plan["duration"]*query_frequency_in_workload*1000/plan["benefit"] if plan["benefit"] > 0 else worst_benefit
         plans.append(plan)
 
     # Create new plans by adding further migration queries from the todo list
@@ -87,7 +87,7 @@ if __name__ == '__main__':
     plan = {
         "migration_query_todo": [i for i in G.nodes if G.nodes[i]["kind"] == "Migration"], "migration_query_done": [], 
         "workload_query_todo": [i for i in G.nodes if G.nodes[i]["kind"] == "Query"], "workload_query_done": [], 
-        "duration": 0, "benefit": 0, "time_to_compensate_migration": worst
+        "duration": 0, "benefit": 0, "time_to_compensate_migration": worst_benefit
     }
     # plans.append(plan)
     # Create plans by adding migration queries from the todo list
