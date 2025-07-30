@@ -34,7 +34,7 @@ def add_cumulative_duration_to_nodes(visited):
                 ready.append(node)
 
 def annotate_queries_in_migrations():
-    ready = [99]
+    ready = [999]
     visited = []
     while ready != []:
         current = ready.pop()
@@ -225,7 +225,7 @@ if __name__ == '__main__':
 
     load_graph(Path("SchedulingMigration/inputs").joinpath(sys.argv[1]))
 
-    print("============================================================================================ Exhaurstive search")
+    print("============================================================================================ Exhaurstive search (cantake a while)")
     steps = 0
     benefit = 0
     enabled = 0
@@ -236,8 +236,8 @@ if __name__ == '__main__':
     start = time.time()
     exhaustive_search([0], get_ready_nodes(G.nodes, [0]), [])
     end = time.time()
-    print(f"Best plan: {best_plan} -> {best_benefit:.2f}")
-    print(f"Worst plan: {worst_plan} -> {worst_benefit:.2f}")
+    print(f"Best plan:   {best_plan} -> {best_benefit:.2f}")
+    print(f"Worst plan:  {worst_plan} -> {worst_benefit:.2f}")
     print(f"{steps} search steps executed in {(end - start):.2f} seconds")
 
     print("============================================================================================ Greedy with the smallest migration duration")
