@@ -258,7 +258,7 @@ if __name__ == '__main__':
     end = time.time()
     print(f"{steps} search steps executed in {(end - start):.2f} seconds")
 
-    print("============================================================================================ Greedy with the complete heuristic function")
+    print("============================================================================================ Greedy with the combination of both++")
     steps = 0
     benefit = 0
     enabled = 0
