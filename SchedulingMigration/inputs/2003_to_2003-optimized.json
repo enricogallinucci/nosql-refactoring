@@ -1,5 +1,5 @@
 {
-  "query_frequency_in_workload": 50,
+  "query_frequency_in_workload": 0.02,
   "nodes": [
     [0,    {"kind": "Phantom",    "descr": "Start",                             "duration": 0}],
     [101,  {"kind": "Migration",  "descr": "PhotoObjAll_Galaxy",                "duration": 14.79}],
