@@ -225,7 +225,7 @@ if __name__ == '__main__':
 
     load_graph(Path("SchedulingMigration/inputs").joinpath(sys.argv[1]))
 
-    print("============================================================================================ Exhaurstive search (cantake a while)")
+    print("============================================================================================ Exhaustive search (can take a while)")
     steps = 0
     benefit = 0
     enabled = 0
