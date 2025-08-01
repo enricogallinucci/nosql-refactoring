@@ -72,7 +72,12 @@ def load_graph(file_path) -> None:
 
 
 def show_graph():
-    nx.draw_shell(G, with_labels=True, font_weight='bold')
+    shells = [
+        [node for node, data in G.nodes(data=True) if data["kind"] == "Query"],
+        [node for node, data in G.nodes(data=True) if data["kind"] == "Migration"]
+    ]
+    labels = {node: data["descr"] for node, data in G.nodes(data=True) if node not in [0, 999]}
+    nx.draw_shell(G.subgraph([n for n in G.nodes if n not in [0, 999]]), nlist=shells, labels=labels, with_labels=True, font_weight='bold')
     plt.show()
 
 
@@ -105,7 +110,7 @@ def update_benefit_of_plan(nodes: list[int], sign: int):
             benefit += sign * G.nodes[i]["duration"] * enabled
 
 
-def exhaustive_search(plan, ready, plan_tail):
+def exhaustive_search(plan, ready, plan_pretail, plan_tail):
     global steps
     global benefit
     global best_benefit, best_plan
@@ -116,20 +121,28 @@ def exhaustive_search(plan, ready, plan_tail):
     # Add all queries to the plan at once (no need for backtracking)
     ready_queries = [i for i in ready if G.nodes[i]["kind"] == "Query" and G.nodes[i]["benefit"] > 0]
     plan_tail.extend([i for i in ready if G.nodes[i]["kind"] == "Query" and G.nodes[i]["benefit"] <= 0])
+    plan_pretail.extend([i for i in ready if G.nodes[i]["kind"] == "Migration" and G.successors(i) == [999]])
     plan.extend(ready_queries)
     update_benefit_of_plan(ready_queries, sign=+1)
     # Add migrations one at a time (with backtracking)
-    ready_migrations = [i for i in ready if G.nodes[i]["kind"] == "Migration"]
+    ready_migrations = [i for i in ready if G.nodes[i]["kind"] == "Migration" and i not in plan_pretail]
+    if plan == [0]:
+        progress_bar = len(ready_migrations)
+    else:
+        progress_bar = None
     if not ready_migrations:
-        plan.extend(plan_tail)
+        plan.extend(plan_pretail+plan_tail)
         if benefit > best_benefit:
             best_benefit, best_plan = benefit, plan.copy()
         if benefit < worst_benefit:
             worst_benefit, worst_plan = benefit, plan.copy()
-        _ = [plan.pop() for _ in range(len(plan_tail))]
+        _ = [plan.pop() for _ in range(len(plan_pretail+plan_tail))]
         # print("Plan found:", plan, benefit)
     else:
         for current in ready_migrations:
+            if progress_bar is not None:
+                print(time.time(), "; Steps taken:", steps, "; First level elements left:", progress_bar)
+                progress_bar -= 1
             plan.append(current)
             # Increase the benefit of the current migration
             update_benefit_of_plan([current], sign=+1)
@@ -139,7 +152,7 @@ def exhaustive_search(plan, ready, plan_tail):
                 if j not in plan and all([n in plan for n in G.predecessors(j)]):
                     next_ready.append(j)
             # Recursive call
-            exhaustive_search(plan, next_ready, plan_tail.copy())
+            exhaustive_search(plan, next_ready, plan_pretail.copy(), plan_tail.copy())
             # Remove the benefit of the current migration
             update_benefit_of_plan([current], sign=-1)
             # Remove the migration node from the plan
@@ -165,6 +178,21 @@ def get_heuristics_query_benefit(plan, nodes) -> list[int]:
         for q in G.nodes[node]["impacted_queries"]:
             if G.nodes[q]["benefit"] > 0:
                 related_benefit += G.nodes[q]["benefit"]
+        heuristics.append(h)
+    return heuristics
+
+
+def get_heuristics_without_subtraction(plan, nodes) -> list[int]:
+    add_cumulative_duration_to_nodes(plan.copy())
+    heuristics = []
+    for node in nodes:
+        pending_duration = sum([G.nodes[n]["duration"] for n in G.nodes if n != node and n not in plan and G.nodes[n]["kind"] == "Migration"])
+        h = 0
+        related_benefit = 0
+        for q in G.nodes[node]["impacted_queries"]:
+            if G.nodes[q]["benefit"] > 0:
+                related_benefit += G.nodes[q]["benefit"]
+                h += pending_duration * G.nodes[q]["benefit"] * (G.nodes[node]["duration"] / G.nodes[q]["cumulative_duration"])
         heuristics.append(h)
     return heuristics
 
@@ -225,44 +253,56 @@ if __name__ == '__main__':
 
     load_graph(Path("SchedulingMigration/inputs").joinpath(sys.argv[1]))
 
-    print("============================================================================================ Exhaustive search (can take a while)")
-    steps = 0
-    benefit = 0
-    enabled = 0
-    best_benefit = 0
-    worst_benefit = 999999999
-    best_plan = [0]
-    worst_plan = [0]
-    start = time.time()
-    exhaustive_search([0], get_ready_nodes(G.nodes, [0]), [])
-    end = time.time()
-    print(f"Best plan:   {best_plan} -> {best_benefit:.2f}")
-    print(f"Worst plan:  {worst_plan} -> {worst_benefit:.2f}")
-    print(f"{steps} search steps executed in {(end - start):.2f} seconds")
+    if len(sys.argv) > 2 and sys.argv[2] == "show":
+        show_graph()
+    else:
+        print("============================================================================================ Exhaustive search (can take a while)")
+        steps = 0
+        benefit = 0
+        enabled = 0
+        best_benefit = 0
+        worst_benefit = 999999999
+        best_plan = [0]
+        worst_plan = [0]
+        start = time.time()
+        exhaustive_search([0], get_ready_nodes(G.nodes, [0]), [], [])
+        end = time.time()
+        print(f"Best plan:   {best_plan} -> {best_benefit:.2f}")
+        print(f"Worst plan:  {worst_plan} -> {worst_benefit:.2f}")
+        print(f"{steps} search steps executed in {(end - start):.2f} seconds")
 
-    print("============================================================================================ Greedy with the smallest migration duration")
-    steps = 0
-    benefit = 0
-    enabled = 0
-    start = time.time()
-    greedy_search([0], ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], heuristic_function=get_heuristics_migration_duration)
-    end = time.time()
-    print(f"{steps} search steps executed in {(end - start):.2f} seconds")
+        print("============================================================================================ Greedy with the smallest migration duration")
+        steps = 0
+        benefit = 0
+        enabled = 0
+        start = time.time()
+        greedy_search([0], ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], heuristic_function=get_heuristics_migration_duration)
+        end = time.time()
+        print(f"{steps} search steps executed in {(end - start):.2f} seconds")
 
-    print("============================================================================================ Greedy with the highest query benefit")
-    steps = 0
-    benefit = 0
-    enabled = 0
-    start = time.time()
-    greedy_search([0], ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], heuristic_function=get_heuristics_query_benefit)
-    end = time.time()
-    print(f"{steps} search steps executed in {(end - start):.2f} seconds")
+        print("============================================================================================ Greedy with the highest query benefit")
+        steps = 0
+        benefit = 0
+        enabled = 0
+        start = time.time()
+        greedy_search([0], ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], heuristic_function=get_heuristics_query_benefit)
+        end = time.time()
+        print(f"{steps} search steps executed in {(end - start):.2f} seconds")
 
-    print("============================================================================================ Greedy with the combination of both++")
-    steps = 0
-    benefit = 0
-    enabled = 0
-    start = time.time()
-    greedy_search([0], ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], heuristic_function=get_heuristics_alltogether)
-    end = time.time()
-    print(f"{steps} search steps executed in {(end - start):.2f} seconds")
+        print("============================================================================================ Greedy with the combination of both and no subtraction")
+        steps = 0
+        benefit = 0
+        enabled = 0
+        start = time.time()
+        greedy_search([0], ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], heuristic_function=get_heuristics_without_subtraction)
+        end = time.time()
+        print(f"{steps} search steps executed in {(end - start):.2f} seconds")
+
+        print("============================================================================================ Greedy with the combination of both++")
+        steps = 0
+        benefit = 0
+        enabled = 0
+        start = time.time()
+        greedy_search([0], ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], heuristic_function=get_heuristics_alltogether)
+        end = time.time()
+        print(f"{steps} search steps executed in {(end - start):.2f} seconds")
