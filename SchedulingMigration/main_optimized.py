@@ -19,19 +19,13 @@ def add_benefit_to_nodes():
             node["benefit"] = query_frequency_in_workload * node["weight"] * (node["time_before"] - node["time_after"])
 
 
-def add_cumulative_duration_to_nodes():
-    ready = [0]
-    while ready != []:
-        current = ready.pop()
-        if not G.nodes[current]["planned"]:
-            cum_dur = G.nodes[current]["duration"]
-            for node in G.predecessors(current):
-                cum_dur += G.nodes[node]["duration"]
-            G.nodes[current]["cumulative_duration"] = cum_dur
-            G.nodes[current]["planned"] = True
-        for node in G.successors(current):
-            if all([G.nodes[n]["planned"] for n in G.predecessors(node)]):
-                ready.append(node)
+def mark_as_planned(nodes):
+    global plan
+    plan.extend(nodes)
+    for node in nodes:
+        for query in G.nodes[node]["impacted_queries"]:
+            G.nodes[query]["cumulative_duration"] -= G.nodes[node]["duration"]
+        G.nodes[node]["planned"] = True
 
 
 def annotate_queries_in_migrations():
@@ -40,6 +34,7 @@ def annotate_queries_in_migrations():
     while ready != []:
         current = ready.pop()
         G.nodes[current]["planned"] = False
+        G.nodes[current]["cumulative_duration"] = 0
         if G.nodes[current]["kind"] == "Query":
             G.nodes[current]["impacted_queries"] = [current]
         else:
@@ -47,6 +42,8 @@ def annotate_queries_in_migrations():
             for node in G.successors(current):
                 impacted.extend(G.nodes[node]["impacted_queries"])
             G.nodes[current]["impacted_queries"] = impacted
+            for query in impacted:
+                G.nodes[query]["cumulative_duration"] += G.nodes[current]["duration"]
             G.nodes[current]["related_benefit"] = sum([G.nodes[n]["benefit"] for n in impacted if G.nodes[n]["benefit"] > 0])
         visited.append(current)
         for node in G.predecessors(current):
@@ -106,9 +103,9 @@ def increase_benefit_of_plan(node: int):
     pending_duration -= G.nodes[node]["duration"]
 
 
-def get_heuristics_alltogether_incremental(plan, nodes) -> list[int]:
+def get_heuristics_alltogether_incremental(nodes) -> list[int]:
     global pending_benefit, pending_duration
-    add_cumulative_duration_to_nodes()
+    # add_cumulative_duration_to_nodes()
     heuristics = []
     for node in nodes:
         h = 0
@@ -126,7 +123,7 @@ def get_heuristics_alltogether_incremental(plan, nodes) -> list[int]:
     return heuristics
 
 
-def greedy_search(plan, ready, plan_tail, plan_pretail, heuristic_function):
+def greedy_search(ready, plan_tail, plan_pretail, heuristic_function):
     global steps
     global benefit
 
@@ -138,7 +135,7 @@ def greedy_search(plan, ready, plan_tail, plan_pretail, heuristic_function):
     pretail = [i for i in ready if G.nodes[i]["kind"] == "Migration" and G.successors(i) == [999]]
     plan_tail.extend(tail)
     plan_pretail.extend(pretail)
-    plan.extend(ready_queries)
+    mark_as_planned(ready_queries)
     increase_enabled_of_plan(ready_queries)  # This has a constant cost, because every query node becomes ready only once
     # Take one more migration
     ready_migrations = [i for i in ready if G.nodes[i]["kind"] == "Migration"]
@@ -146,9 +143,9 @@ def greedy_search(plan, ready, plan_tail, plan_pretail, heuristic_function):
         plan.extend(plan_pretail+plan_tail)
         print(f"Greedy plan: {plan} -> {benefit:.2f}")
     else:
-        heuristics = heuristic_function(plan, ready_migrations)
+        heuristics = heuristic_function(ready_migrations)
         current = ready_migrations[heuristics.index(max(heuristics))]
-        plan.append(current)
+        mark_as_planned([current])
         # Increase the benefit of the current migration
         increase_benefit_of_plan(current)  # This has a constant cost, because every migration node becomes ready only once
         # Add new nodes that became ready
@@ -157,7 +154,7 @@ def greedy_search(plan, ready, plan_tail, plan_pretail, heuristic_function):
             if j not in plan and all([n in plan for n in G.predecessors(j) if n != 0]):
                 next_ready.append(j)
         # Recursive call
-        greedy_search(plan, next_ready, plan_tail, plan_pretail, heuristic_function)
+        greedy_search(next_ready, plan_tail, plan_pretail, heuristic_function)
 
 
 if __name__ == '__main__':
@@ -176,8 +173,9 @@ if __name__ == '__main__':
         enabled = 0
         pending_benefit = sum([G.nodes[n]["benefit"] for n in G.nodes if G.nodes[n]["kind"] == "Query" and G.nodes[n]["benefit"] > 0])
         pending_duration = sum([G.nodes[n]["duration"] for n in G.nodes if G.nodes[n]["kind"] == "Migration"])
+        plan = []
 
         start = time.time()
-        greedy_search([], ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], plan_pretail=[], heuristic_function=get_heuristics_alltogether_incremental)
+        greedy_search(ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], plan_pretail=[], heuristic_function=get_heuristics_alltogether_incremental)
         end = time.time()
         print(f"{steps} search steps executed in {(end - start):.2f} seconds")
