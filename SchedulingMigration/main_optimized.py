@@ -19,18 +19,18 @@ def add_benefit_to_nodes():
             node["benefit"] = query_frequency_in_workload * node["weight"] * (node["time_before"] - node["time_after"])
 
 
-def add_cumulative_duration_to_nodes(visited):
+def add_cumulative_duration_to_nodes():
     ready = [0]
     while ready != []:
         current = ready.pop()
-        if current not in visited:
+        if not G.nodes[current]["planned"]:
             cum_dur = G.nodes[current]["duration"]
             for node in G.predecessors(current):
                 cum_dur += G.nodes[node]["duration"]
             G.nodes[current]["cumulative_duration"] = cum_dur
-            visited.append(current)
+            G.nodes[current]["planned"] = True
         for node in G.successors(current):
-            if all([n in visited for n in G.predecessors(node)]):
+            if all([G.nodes[n]["planned"] for n in G.predecessors(node)]):
                 ready.append(node)
 
 
@@ -39,6 +39,7 @@ def annotate_queries_in_migrations():
     visited = []
     while ready != []:
         current = ready.pop()
+        G.nodes[current]["planned"] = False
         if G.nodes[current]["kind"] == "Query":
             G.nodes[current]["impacted_queries"] = [current]
         else:
@@ -107,7 +108,7 @@ def increase_benefit_of_plan(node: int):
 
 def get_heuristics_alltogether_incremental(plan, nodes) -> list[int]:
     global pending_benefit, pending_duration
-    add_cumulative_duration_to_nodes(plan.copy())
+    add_cumulative_duration_to_nodes()
     heuristics = []
     for node in nodes:
         h = 0
