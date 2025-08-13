@@ -12,20 +12,13 @@ G = nx.DiGraph()
 query_frequency_in_workload = 0     # Number of queries per second in the workload
 
 
-def add_benefit_to_nodes():
+def initialize_nodes():
     for current in G.nodes:
         node = G.nodes[current]
+        node["planned"] = False
+        node["cumulative_duration"] = 0
         if node["kind"] == "Query":
             node["benefit"] = query_frequency_in_workload * node["weight"] * (node["time_before"] - node["time_after"])
-
-
-def mark_as_planned(nodes):
-    global plan
-    plan.extend(nodes)
-    for node in nodes:
-        for query in G.nodes[node]["impacted_queries"]:
-            G.nodes[query]["cumulative_duration"] -= G.nodes[node]["duration"]
-        G.nodes[node]["planned"] = True
 
 
 def annotate_queries_in_migrations():
@@ -33,8 +26,6 @@ def annotate_queries_in_migrations():
     visited = []
     while ready != []:
         current = ready.pop()
-        G.nodes[current]["planned"] = False
-        G.nodes[current]["cumulative_duration"] = 0
         if G.nodes[current]["kind"] == "Query":
             G.nodes[current]["impacted_queries"] = [current]
         else:
@@ -42,9 +33,9 @@ def annotate_queries_in_migrations():
             for node in G.successors(current):
                 impacted.extend(G.nodes[node]["impacted_queries"])
             G.nodes[current]["impacted_queries"] = impacted
+            G.nodes[current]["related_benefit"] = sum([G.nodes[n]["benefit"] for n in impacted if G.nodes[n]["benefit"] > 0])
             for query in impacted:
                 G.nodes[query]["cumulative_duration"] += G.nodes[current]["duration"]
-            G.nodes[current]["related_benefit"] = sum([G.nodes[n]["benefit"] for n in impacted if G.nodes[n]["benefit"] > 0])
         visited.append(current)
         for node in G.predecessors(current):
             if all([n in visited for n in G.successors(node)]):
@@ -65,7 +56,7 @@ def load_graph(file_path) -> None:
     G.add_nodes_from(nodes)
     G.add_edges_from(edges)
 
-    add_benefit_to_nodes()
+    initialize_nodes()
     annotate_queries_in_migrations()
     # for i in G.nodes:
     #     print(G.nodes[i])
@@ -81,12 +72,13 @@ def show_graph():
     plt.show()
 
 
-def get_ready_nodes(nodes, visited) -> list[int]:
-    ready = []
-    for i in nodes:
-        if i not in visited and all([n in visited for n in G.predecessors(i)]):
-            ready.append(i)
-    return ready
+def mark_as_planned(nodes):
+    global plan
+    plan.extend(nodes)
+    for node in nodes:
+        for query in G.nodes[node]["impacted_queries"]:
+            G.nodes[query]["cumulative_duration"] -= G.nodes[node]["duration"]
+        G.nodes[node]["planned"] = True
 
 
 def increase_enabled_of_plan(nodes: list[int]):
@@ -176,6 +168,6 @@ if __name__ == '__main__':
         plan = []
 
         start = time.time()
-        greedy_search(ready=get_ready_nodes(G.nodes, visited=[0]), plan_tail=[], plan_pretail=[], heuristic_function=get_heuristics_alltogether_incremental)
+        greedy_search(ready=[n for n in G.nodes if list(G.predecessors(n)) == [0]], plan_tail=[], plan_pretail=[], heuristic_function=get_heuristics_alltogether_incremental)
         end = time.time()
         print(f"{steps} search steps executed in {(end - start):.2f} seconds")
