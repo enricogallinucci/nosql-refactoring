@@ -149,8 +149,10 @@ def greedy_search(ready_nodes):
                 next_ready_nodes.append(j)
         ready_nodes.remove(current)
         ready_nodes.extend(split_ready_nodes(next_ready_nodes))
-    for current in plan_pretail:
+    for current in plan_pretail:    # Append migrations that do not enable any query
         add_to_plan(current)
+    plan.extend(plan_tail)          # Append queries with negative benefit
+    plan.remove(0)                  # Remove the phantom
 
 
 if __name__ == '__main__':
@@ -174,8 +176,6 @@ if __name__ == '__main__':
 
         start = time.time()
         greedy_search(ready_nodes=[0])  # Start the search by the phantom
-        plan.remove(0)              # Remove the phantom
-        plan.extend(plan_tail)      # Append queries with negative benefit
         end = time.time()
         print(f"Greedy search executed in {(end - start):.2f} seconds")
         print(f"Plan: {plan}")
