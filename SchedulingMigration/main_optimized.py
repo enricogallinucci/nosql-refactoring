@@ -15,7 +15,6 @@ query_frequency_in_workload = 0     # Number of queries per second in the worklo
 def initialize_nodes():
     for current in G.nodes:
         node = G.nodes[current]
-        node["planned"] = False
         node["cumulative_duration"] = 0
         if node["kind"] == "Query":
             node["benefit"] = query_frequency_in_workload * node["weight"] * (node["time_before"] - node["time_after"])
@@ -72,25 +71,28 @@ def show_graph():
     plt.show()
 
 
-def mark_as_planned(node):
+def add_to_plan(node: int):
     global plan
     plan.append(node)
-    for query in G.nodes[node]["impacted_queries"]:
-        G.nodes[query]["cumulative_duration"] -= G.nodes[node]["duration"]
-    G.nodes[node]["planned"] = True
+    if G.nodes[node]["kind"] == "Migration":
+        # Increase the benefit of the current migration
+        increase_benefit_of_plan(node)
+        # Decrease the pending duration of impacted queries
+        for query in G.nodes[node]["impacted_queries"]:
+            G.nodes[query]["cumulative_duration"] -= G.nodes[node]["duration"]
 
 
-def increase_enabled_of_plan(node: int):
-    global enabled, pending_benefit
+def increase_enabled_of_plan(query: int):
+    global enabled_benefit, pending_benefit
     # We do not need to check if the benefit is positive, because the negative ones are in the tail
-    enabled += G.nodes[node]["benefit"]
-    pending_benefit -= G.nodes[node]["benefit"]
+    enabled_benefit += G.nodes[query]["benefit"]
+    pending_benefit -= G.nodes[query]["benefit"]
 
 
-def increase_benefit_of_plan(node: int):
-    global benefit, enabled, pending_duration
-    benefit += G.nodes[node]["duration"] * enabled
-    pending_duration -= G.nodes[node]["duration"]
+def increase_benefit_of_plan(migration: int):
+    global cum_benefit, enabled_benefit, pending_duration
+    cum_benefit += G.nodes[migration]["duration"] * enabled_benefit
+    pending_duration -= G.nodes[migration]["duration"]
 
 
 def get_heuristics(nodes) -> list[int]:
@@ -120,43 +122,35 @@ def split_ready_nodes(nodes: list[int]) -> list[int]:
     ready_migrations = []
     for node in nodes:
         if G.nodes[node]["kind"] == "Query" and G.nodes[node]["benefit"] > 0:
-            mark_as_planned(node)
+            add_to_plan(node)               # Beneficial queries are added to the plan as soon as found to be ready
             increase_enabled_of_plan(node)  # This has a constant cost, because every query node becomes ready only once
         elif G.nodes[node]["kind"] == "Query" and G.nodes[node]["benefit"] <= 0:
-            plan_tail.append(node)
+            plan_tail.append(node)          # Queries with negative benefit go at the end of the plan
         elif G.nodes[node]["kind"] == "Migration" and list(G.successors(node)) == [999]:
-            plan_pretail.append(node)
+            plan_pretail.append(node)       # Migrations that do not enable any query are the last ones to be executed
         elif G.nodes[node]["kind"] == "Migration":
-            ready_migrations.append(node)
+            ready_migrations.append(node)   # Other migrations require scheduling
         else:
             raise ValueError("Unexpected node kind")
     return ready_migrations
 
 
-def greedy_search(ready):
+def greedy_search(ready_nodes):
     global plan
 
-    steps = -1  # No need to count the phantom
-    while ready:
-        heuristics = get_heuristics(ready)
-        current = ready[heuristics.index(max(heuristics))]
-        mark_as_planned(current)
-        # Increase the benefit of the current migration
-        increase_benefit_of_plan(current)
-        # Add new nodes that became ready
-        next_ready = []
+    while ready_nodes:
+        heuristics = get_heuristics(ready_nodes)
+        current = ready_nodes[heuristics.index(max(heuristics))]
+        add_to_plan(current)
+        # Find new nodes that became ready
+        next_ready_nodes = []
         for j in G.successors(current):
             if j not in plan and all([n in plan for n in G.predecessors(j)]):
-                next_ready.append(j)
-        ready.remove(current)
-        ready.extend(split_ready_nodes(next_ready))
-        steps += 1
+                next_ready_nodes.append(j)
+        ready_nodes.remove(current)
+        ready_nodes.extend(split_ready_nodes(next_ready_nodes))
     for current in plan_pretail:
-        mark_as_planned(current)
-        # Increase the benefit of the current migration
-        increase_benefit_of_plan(current)
-        steps += 1
-    return steps
+        add_to_plan(current)
 
 
 if __name__ == '__main__':
@@ -170,20 +164,19 @@ if __name__ == '__main__':
         show_graph()
     else:
         print("================================================================================= Greedy with the right heuristic incrementally computed")
-        benefit = 0
-        enabled = 0
+        cum_benefit = 0             # Cumulative benefit of the plan
+        enabled_benefit = 0         # Benefit enabled up to now (adding pending benefit should give a constant value)
         pending_benefit = sum([G.nodes[n]["benefit"] for n in G.nodes if G.nodes[n]["kind"] == "Query" and G.nodes[n]["benefit"] > 0])
-        pending_duration = sum([G.nodes[n]["duration"] for n in G.nodes if G.nodes[n]["kind"] == "Migration"])
+        pending_duration = sum([G.nodes[n]["duration"] for n in G.nodes if G.nodes[n]["kind"] == "Migration"])  # Duration of the migration tasks to be planned
         plan = []
-        plan_tail = []      # Queries with negative benefit
-        plan_pretail = []   # Migrations not required by any query
+        plan_tail = []              # Queries with negative benefit
+        plan_pretail = []           # Migrations not required by any query
 
         start = time.time()
-        steps = greedy_search(ready=[0])
+        greedy_search(ready_nodes=[0])  # Start the search by the phantom
+        plan.remove(0)              # Remove the phantom
+        plan.extend(plan_tail)      # Append queries with negative benefit
         end = time.time()
-        print(f"{steps} search steps executed in {(end - start):.2f} seconds")
-
-        plan.extend(plan_tail)
-        print(f"Greedy plan: {plan}")
-        print(f"Scheduling benefit: {benefit:.2f}")
-
+        print(f"Greedy search executed in {(end - start):.2f} seconds")
+        print(f"Plan: {plan}")
+        print(f"Scheduling benefit: {cum_benefit:.2f}")
