@@ -71,19 +71,9 @@ def show_graph():
     plt.show()
 
 
-def add_to_plan(node: int):
-    global plan
-    plan.append(node)
-    if G.nodes[node]["kind"] == "Migration":
-        # Increase the benefit of the current migration
-        increase_benefit_of_plan(node)
-        # Decrease the pending duration of impacted queries
-        for query in G.nodes[node]["impacted_queries"]:
-            G.nodes[query]["cumulative_duration"] -= G.nodes[node]["duration"]
-
-
 def increase_enabled_of_plan(query: int):
     global enabled_benefit, pending_benefit
+
     # We do not need to check if the benefit is positive, because the negative ones are in the tail
     enabled_benefit += G.nodes[query]["benefit"]
     pending_benefit -= G.nodes[query]["benefit"]
@@ -91,13 +81,29 @@ def increase_enabled_of_plan(query: int):
 
 def increase_benefit_of_plan(migration: int):
     global cum_benefit, enabled_benefit, pending_duration
+
     cum_benefit += G.nodes[migration]["duration"] * enabled_benefit
     pending_duration -= G.nodes[migration]["duration"]
 
 
+def add_to_plan(node: int):
+    global plan
+
+    plan.append(node)
+    if G.nodes[node]["kind"] == "Migration":
+        # Increase the benefit of the current migration
+        increase_benefit_of_plan(node)
+        # Decrease the pending duration of impacted queries
+        for query in G.nodes[node]["impacted_queries"]:
+            G.nodes[query]["cumulative_duration"] -= G.nodes[node]["duration"]
+    elif G.nodes[node]["kind"] == "Query":
+        increase_enabled_of_plan(node)
+
+
 def get_heuristics(nodes) -> list[int]:
     global pending_benefit, pending_duration
-    # add_cumulative_duration_to_nodes()
+    # TODO: Instead of recomputing all heuristics in every loop, we could simply update those affected on adding a migration to a plan.
+    #       Still, finding the maximum value among the heuristics would be linear on the size of ready_nodes.
     heuristics = []
     for node in nodes:
         h = 0
@@ -112,7 +118,7 @@ def get_heuristics(nodes) -> list[int]:
             # The heuristic subtracts the benefit removed from all the other queries that do not benefit if we do the migration before and not after them
             h -= (pending_benefit - G.nodes[node]["related_benefit"]) * G.nodes[node]["duration"]
         heuristics.append(h)
-    #print("All together:", nodes, "->", heuristics)
+    # print("Heuristics:", nodes, "->", heuristics)
     return heuristics
 
 
@@ -123,11 +129,12 @@ def split_ready_nodes(nodes: list[int]) -> list[int]:
     for node in nodes:
         if G.nodes[node]["kind"] == "Query" and G.nodes[node]["benefit"] > 0:
             add_to_plan(node)               # Beneficial queries are added to the plan as soon as found to be ready
-            increase_enabled_of_plan(node)  # This has a constant cost, because every query node becomes ready only once
         elif G.nodes[node]["kind"] == "Query" and G.nodes[node]["benefit"] <= 0:
             plan_tail.append(node)          # Queries with negative benefit go at the end of the plan
-        elif G.nodes[node]["kind"] == "Migration" and list(G.successors(node)) == [999]:
-            plan_pretail.append(node)       # Migrations that do not enable any query are the last ones to be executed
+        elif G.nodes[node]["kind"] == "Migration" and all(G.nodes[q]["benefit"] <= 0 for q in G.nodes[node]["impacted_queries"]):
+            plan_pretail.append(node)       # Migrations that do not enable any query with positive benefit are the last ones
+            # We need to add now the ready successors to the pretail, as well
+            assert not split_ready_nodes([s for s in G.successors(node) if all([p in plan+plan_pretail for p in G.predecessors(s)])]), f"If a node has not positive impacted queries, its successors {G.nodes[node].successors()} should neither have them"
         elif G.nodes[node]["kind"] == "Migration":
             ready_migrations.append(node)   # Other migrations require scheduling
         else:
@@ -136,18 +143,15 @@ def split_ready_nodes(nodes: list[int]) -> list[int]:
 
 
 def greedy_search(ready_nodes):
-    global plan
+    global plan, plan_pretail
 
     while ready_nodes:
         heuristics = get_heuristics(ready_nodes)
         current = ready_nodes[heuristics.index(max(heuristics))]
         add_to_plan(current)
-        # Find new nodes that became ready
-        next_ready_nodes = []
-        for j in G.successors(current):
-            if j not in plan and all([n in plan for n in G.predecessors(j)]):
-                next_ready_nodes.append(j)
         ready_nodes.remove(current)
+        # Find new nodes that became ready
+        next_ready_nodes = [s for s in G.successors(current) if all([p in plan+plan_pretail for p in G.predecessors(s)])]
         ready_nodes.extend(split_ready_nodes(next_ready_nodes))
     for current in plan_pretail:    # Append migrations that do not enable any query
         add_to_plan(current)
