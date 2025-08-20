@@ -171,13 +171,13 @@ def greedy_search(ready_node):
     ready_nodes = [s for s in G.successors(ready_node)]
     while ready_nodes:
         # Sort them by heuristic value
-        heuristics = [G.nodes[n]["calc_benefit"]/G.nodes[n]["calc_duration"] for n in ready_nodes]
+        heuristics = [G.nodes[n]["calc_benefit"]/G.nodes[n]["calc_duration"] if G.nodes[n]["calc_duration"]>0 else 0 for n in ready_nodes]
         print("Heuristics:", ready_nodes, "->", heuristics)
         current = ready_nodes[heuristics.index(max(heuristics))]
         add_to_plan(current)
         ready_nodes.remove(current)
         
-        next_ready_nodes = [s for s in G.successors(current) if all([p in plan+plan_pretail for p in G.predecessors(s)])]
+        next_ready_nodes = [s for s in G.successors(current) if all([p in plan+plan_pretail for p in G.predecessors(s)]) and G.nodes[s]["kind"]!="Phantom"]
         ready_nodes.extend(split_ready_nodes(next_ready_nodes))
         for chained in G.nodes[current]["chained_migrations"]:
             if chained != current:
