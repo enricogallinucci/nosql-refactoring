@@ -1,0 +1,22 @@
+{
+  "query_frequency_in_workload": 1,
+  "nodes": [
+    [0,    {"kind": "Phantom",    "descr": "Start",                             "duration": 0}],
+    [101,  {"kind": "Migration",  "descr": "PhotoObjAll_Galaxy",                "duration": 1}],
+    [102,  {"kind": "Migration",  "descr": "PhotoObjAll_GalaxyComplementary",   "duration": 2}],
+    [103,  {"kind": "Migration",  "descr": "PhotoObjAll_Primary",               "duration": 2}],
+    [104,  {"kind": "Migration",  "descr": "PhotoObjAll_PrimaryComplementary",  "duration": 4}],
+    [201, {"kind": "Query",      "descr": "Q1",                                "duration": 0, "weight": 1, "time_before": 10, "time_after": 0}],
+    [202, {"kind": "Query",      "descr": "Q2",                                "duration": 0, "weight": 1, "time_before": 4, "time_after": 0}],
+    [999, {"kind": "Phantom",    "descr": "End",                               "duration": 0}]
+  ],
+
+  "edges": [
+    [0, 101], [0, 102], [0, 103],
+    [101, 104],
+    [102, 104],
+    [103, 202],
+    [104, 201],
+    [201, 999], [202, 999]
+  ]
+}
