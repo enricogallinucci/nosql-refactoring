@@ -51,8 +51,7 @@ def forward_compute_benefits_and_cumulative_durations():
     while ready:
         current_id = ready.pop()
         current = G.nodes[current_id]
-        # current["cumulative_duration"] = current.get("duration", 0) + sum([G.nodes[pred_id]["cumulative_duration"] for pred_id in G.predecessors(current_id)])
-        current["cumulative_duration"] = current.get("duration", 0) + sum([G.nodes[pred_id]["duration"] for pred_id in G.predecessors(current_id)])
+        current["cumulative_duration"] = sum([G.nodes[pred_id]["duration"] for pred_id in G.predecessors(current_id)]) if G.predecessors(current_id) else 0 # Cumulative duration is only about the parents
         if G.nodes[current_id]["kind"] == "Query":
             current["benefit"] = query_frequency_in_workload * current["weight"] * (current["time_before"] - current["time_after"])
         visited.append(current_id)
@@ -69,6 +68,8 @@ def backward_compute_heuristics():
         current_id = ready.pop()
         current = G.nodes[current_id]
         if current["kind"] == "Query":
+            current["promised_benefit"] = current["benefit"] # Initialized for recursive calls
+            current["promised_duration"] = current["duration"] # Initialized for recursive calls
             if current["benefit"] > 0:
                 current["heuristic"] = float('inf')    # We plan positive queries as soon as possible, so we assign them the maximum heuristic
             else:
@@ -80,24 +81,22 @@ def backward_compute_heuristics():
             for successor_id in G.successors(current_id):
                 successor = G.nodes[successor_id]
                 if successor["kind"] == "Query":
-                    if successor["benefit"] > 0:
+                    if successor["benefit"] > 0: # Note: this is ok only if negative queries can be postponed
                         immediate_benefit += successor["benefit"] * current["duration"] / successor["cumulative_duration"]
             # Notice that we are multiplying and dividing immediate_benefit by current["duration"] in present_heuristic, but cannot be simplified in the future_heuristic
             present_heuristic = immediate_benefit/current["duration"]
             for successor_id in G.successors(current_id):
                 successor = G.nodes[successor_id]
-                if successor["kind"] == "Migration" and present_heuristic < successor["heuristic"]:
-                    promised_benefit += successor["promised_benefit"]
+                weighted_successor_promised_benefit = successor["promised_benefit"] * current["duration"] / successor["cumulative_duration"] if successor["cumulative_duration"] > 0 else 0
+                possible_promised_heuristic = (immediate_benefit+weighted_successor_promised_benefit)/(current["duration"]+successor["promised_duration"])
+                if successor["kind"] == "Migration" and present_heuristic < possible_promised_heuristic:
+                    promised_benefit += weighted_successor_promised_benefit
                     promised_duration += successor["promised_duration"]
             promised_heuristic = (immediate_benefit+promised_benefit)/(current["duration"]+promised_duration)
-            if present_heuristic >= promised_heuristic:
-                current["heuristic"] = present_heuristic
-                current["promised_benefit"] = immediate_benefit
-                current["promised_duration"] = current["duration"]
-            else:
-                current["heuristic"] = promised_heuristic
-                current["promised_benefit"] = immediate_benefit+promised_benefit
-                current["promised_duration"] = current["duration"]+promised_duration
+            # promised_benefit and promised_duration are >=0 only if they have improved the present_heuristic
+            current["heuristic"] = promised_heuristic
+            current["promised_benefit"] = immediate_benefit+promised_benefit
+            current["promised_duration"] = current["duration"]+promised_duration
         else:   # This should be a phantom
             current["heuristic"] = 0
             current["promised_benefit"] = 0
