@@ -51,7 +51,10 @@ def forward_compute_benefits_and_cumulative_durations():
     while ready:
         current_id = ready.pop()
         current = G.nodes[current_id]
-        current["cumulative_duration"] = sum([G.nodes[pred_id]["duration"] for pred_id in G.predecessors(current_id)]) if G.predecessors(current_id) else 0 # Cumulative duration is only about the parents
+        # Compute predecessors duration as only that of its the parents
+        # TODO: I think the last condition is not needed as the sum of an empty list is already zero
+        current["predecessors_duration"] = sum([G.nodes[pred_id]["duration"] for pred_id in G.predecessors(current_id)]) if G.predecessors(current_id) else 0
+        # Compute the weighted benefit of queries
         if G.nodes[current_id]["kind"] == "Query":
             current["benefit"] = query_frequency_in_workload * current["weight"] * (current["time_before"] - current["time_after"])
         visited.append(current_id)
@@ -63,38 +66,49 @@ def forward_compute_benefits_and_cumulative_durations():
 def backward_compute_heuristics():
     ready = [999]
     visited = []
-    # Follow backward topological order to compute the heuristic
+    # Follow backward (children to parents) topological order to compute the heuristic
     while ready:
         current_id = ready.pop()
         current = G.nodes[current_id]
+        # Set the heuristic of queries depending just on the sign of their benefit
         if current["kind"] == "Query":
-            current["promised_benefit"] = current["benefit"] # Initialized for recursive calls
-            current["promised_duration"] = current["duration"] # Initialized for recursive calls
+            # TODO: Are these two initializations really necessary? I think they are only used under "if G.nodes[s_id]["kind"] == "Migration"]", which makes them useless
+            current["promised_benefit"] = current["benefit"]     # Initialized for recursive calls
+            current["promised_duration"] = current["duration"]   # Initialized for recursive calls
             if current["benefit"] > 0:
                 current["heuristic"] = float('inf')    # We plan positive queries as soon as possible, so we assign them the maximum heuristic
             else:
                 current["heuristic"] = float('-inf')   # We plan negative queries as late as possible, so we assign them the minimum heuristic
         elif current["kind"] == "Migration":
+            # Compute the benefit of a migration itself
             immediate_benefit = 0
-            promised_benefit = 0
-            promised_duration = 0
             for successor_id in G.successors(current_id):
                 successor = G.nodes[successor_id]
                 if successor["kind"] == "Query":
-                    if successor["benefit"] > 0: # Note: this is ok only if negative queries can be postponed
-                        immediate_benefit += successor["benefit"] * current["duration"] / successor["cumulative_duration"]
-            # Notice that we are multiplying and dividing immediate_benefit by current["duration"] in present_heuristic, but cannot be simplified in the future_heuristic
+                    if successor["benefit"] > 0:        # Note: this is ok only if negative queries can be postponed
+                        immediate_benefit += successor["benefit"] * current["duration"] / successor["predecessors_duration"]
+            # Notice that we are multiplying and dividing immediate_benefit by current["duration"] in present_heuristic, but cannot be simplified in the promised_heuristic
             present_heuristic = immediate_benefit/current["duration"]
+            # Check if it is worth adding to the heuristic the duration promised by its children migrations
+            promised_benefit = 0
+            promised_duration = 0
             for successor_id in [s_id for s_id in G.successors(current_id) if G.nodes[s_id]["kind"] == "Migration"]:
                 successor = G.nodes[successor_id]
-                weighted_successor_promised_benefit = successor["promised_benefit"] * current["duration"] / successor["cumulative_duration"] if successor["cumulative_duration"] > 0 else 0
+                weighted_successor_promised_benefit = successor["promised_benefit"] * current["duration"] / successor["predecessors_duration"] if successor["predecessors_duration"] > 0 else 0
                 possible_promised_heuristic = (immediate_benefit+weighted_successor_promised_benefit)/(current["duration"]+successor["promised_duration"])
+                # TODO: I think we can simply compare 'present_heuristic < weighted_successor_promised_benefit/successor["promised_duration"]'
+                #       B1/D1 < (B1+B2)/(D1+D2)
+                #       B1*(D1+D2) < D1*(B1+B2)
+                #       B1*D1+B1*D2 < D1*B1+D1*B2
+                #       B1*D2 < D1*B2
+                #       B1/D1 < B2/D2
+                #       The result should be the same, but looks more clear to me
+                #       We then save the calculation of possible_promised_heuristic
                 if present_heuristic < possible_promised_heuristic:
                     promised_benefit += weighted_successor_promised_benefit
                     promised_duration += successor["promised_duration"]
-            promised_heuristic = (immediate_benefit+promised_benefit)/(current["duration"]+promised_duration)
             # promised_benefit and promised_duration are >=0 only if they have improved the present_heuristic
-            current["heuristic"] = promised_heuristic
+            current["heuristic"] = (immediate_benefit+promised_benefit)/(current["duration"]+promised_duration)
             current["promised_benefit"] = immediate_benefit+promised_benefit
             current["promised_duration"] = current["duration"]+promised_duration
         else:   # This should be a phantom
