@@ -85,11 +85,11 @@ def backward_compute_heuristics():
                         immediate_benefit += successor["benefit"] * current["duration"] / successor["cumulative_duration"]
             # Notice that we are multiplying and dividing immediate_benefit by current["duration"] in present_heuristic, but cannot be simplified in the future_heuristic
             present_heuristic = immediate_benefit/current["duration"]
-            for successor_id in G.successors(current_id):
+            for successor_id in [s_id for s_id in G.successors(current_id) if G.nodes[s_id]["kind"] == "Migration"]:
                 successor = G.nodes[successor_id]
                 weighted_successor_promised_benefit = successor["promised_benefit"] * current["duration"] / successor["cumulative_duration"] if successor["cumulative_duration"] > 0 else 0
                 possible_promised_heuristic = (immediate_benefit+weighted_successor_promised_benefit)/(current["duration"]+successor["promised_duration"])
-                if successor["kind"] == "Migration" and present_heuristic < possible_promised_heuristic:
+                if present_heuristic < possible_promised_heuristic:
                     promised_benefit += weighted_successor_promised_benefit
                     promised_duration += successor["promised_duration"]
             promised_heuristic = (immediate_benefit+promised_benefit)/(current["duration"]+promised_duration)
