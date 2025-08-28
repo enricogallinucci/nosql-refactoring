@@ -86,18 +86,16 @@ def backward_compute_heuristics():
             # Notice that we are multiplying and dividing immediate_benefit by current["duration"] in present_heuristic, but cannot be simplified in the promised_heuristic
             present_heuristic = immediate_benefit/current["duration"]
             # Check if it is worth adding to the heuristic the duration promised by its children migrations
-            promised_benefit = 0
-            promised_duration = 0
+            current["promised_benefit"] = immediate_benefit
+            current["promised_duration"] = current["duration"]
             for successor_id in [s_id for s_id in G.successors(current_id) if G.nodes[s_id]["kind"] == "Migration"]:
                 successor = G.nodes[successor_id]
                 weighted_successor_promised_benefit = successor["promised_benefit"] * current["duration"] / successor["predecessors_duration"] if successor["predecessors_duration"] > 0 else 0
                 if present_heuristic < weighted_successor_promised_benefit/successor["promised_duration"]:
-                    promised_benefit += weighted_successor_promised_benefit
-                    promised_duration += successor["promised_duration"]
-            # promised_benefit and promised_duration are >=0 only if they have improved the present_heuristic
-            current["heuristic"] = (immediate_benefit+promised_benefit)/(current["duration"]+promised_duration)
-            current["promised_benefit"] = immediate_benefit+promised_benefit
-            current["promised_duration"] = current["duration"]+promised_duration
+                    current["promised_benefit"] += weighted_successor_promised_benefit
+                    current["promised_duration"] += successor["promised_duration"]
+            # promised_benefit and promised_duration have changed only if they have improved the present_heuristic
+            current["heuristic"] = current["promised_benefit"]/current["promised_duration"]
         else:   # This should be a phantom
             current["heuristic"] = 0
             current["promised_benefit"] = 0
