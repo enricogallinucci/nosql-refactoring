@@ -1,0 +1,34 @@
+{
+  "query_frequency_in_workload": 0.02,
+  "nodes": [
+    [0,    {"kind": "Phantom",    "descr": "Start",                             "duration": 0}],
+    [101,  {"kind": "Migration",  "descr": "PhotoObjAll_Galaxy",                "duration": 4.49}],
+    [102,  {"kind": "Migration",  "descr": "PhotoObjAll_GalaxyComplementary",   "duration": 3.81}],
+    [103,  {"kind": "Migration",  "descr": "PhotoObjAll_Primary",               "duration": 18.39}],
+    [104,  {"kind": "Migration",  "descr": "PhotoObjAll_PrimaryComplementary",  "duration": 20.86}],
+    [105,  {"kind": "Migration",  "descr": "PhotoObjAll_Other",                 "duration": 17.11}],
+    [106,  {"kind": "Migration",  "descr": "Photoz",                            "duration": 0.46}],
+    [107,  {"kind": "Migration",  "descr": "Photoz_Complementary",              "duration": 0.13}],
+    [108,  {"kind": "Migration",  "descr": "SpecObjAll",                        "duration": 3.38}],
+    [109,  {"kind": "Migration",  "descr": "SpecObjAll_Complementary",          "duration": 0.10}],
+    [201, {"kind": "Query", "descr": "Q1", "duration":0, "weight":0.603, "time_before": 1.454462, "time_after": 1.562113}],
+    [202, {"kind": "Query", "descr": "Q2", "duration":0, "weight":0.2246, "time_before": 192.555017, "time_after": 11.514274}],
+    [203, {"kind": "Query", "descr": "Q3", "duration":0, "weight":0.0475, "time_before": 196.824689, "time_after": 26.913381}],
+    [204, {"kind": "Query", "descr": "Q4", "duration":0, "weight":0.114, "time_before": 178.467625, "time_after": 24.296709}],
+    [205, {"kind": "Query", "descr": "Q5", "duration":0, "weight":0.0109, "time_before": 0.031733, "time_after": 0.071357}],    
+    [999, {"kind": "Phantom",    "descr": "End",                               "duration": 0}]
+  ],
+
+  "edges": [
+    [0, 101], [0, 103], [0, 105],
+    [0, 102], [0, 104],
+    [101, 106], [101, 107], [101, 108], [101, 109],
+    [103, 201],
+    [103, 202],
+    [101, 203], [103, 203], [106, 203], [108, 203],
+    [101, 204], [103, 204], [106, 204], [108, 204],
+    [108, 205], [109, 205],
+    [201, 999], [202, 999], [203, 999], [204, 999], [205, 999],
+    [102, 999], [104, 999], [105, 999], [107, 999]
+  ]
+}

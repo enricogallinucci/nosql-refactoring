@@ -1,0 +1,29 @@
+{
+  "query_frequency_in_workload": 1,
+  "nodes": [
+    [0,    {"kind": "Phantom",    "descr": "",  "duration": 0}],
+    [101,  {"kind": "Migration",  "descr": "",  "duration": 1}],
+    [102,  {"kind": "Migration",  "descr": "",  "duration": 2}],
+    [103,  {"kind": "Migration",  "descr": "",  "duration": 3}],
+    [104,  {"kind": "Migration",  "descr": "",  "duration": 4}],
+    [105,  {"kind": "Migration",  "descr": "",  "duration": 5}],
+    [106,  {"kind": "Migration",  "descr": "",  "duration": 6}],
+    [107,  {"kind": "Migration",  "descr": "",  "duration": 7}],
+    [108,  {"kind": "Migration",  "descr": "",  "duration": 8}],
+    [201, {"kind": "Query",      "descr": "Q1", "duration": 0, "weight": 1, "time_before": 10, "time_after": 0}],
+    [202, {"kind": "Query",      "descr": "Q2", "duration": 0, "weight": 1, "time_before": 9, "time_after": 0}],
+    [203, {"kind": "Query",      "descr": "Q2", "duration": 0, "weight": 1, "time_before": 8, "time_after": 0}],
+    [204, {"kind": "Query",      "descr": "Q2", "duration": 0, "weight": 1, "time_before": 7, "time_after": 0}],
+    [205, {"kind": "Query",      "descr": "Q2", "duration": 0, "weight": 1, "time_before": 6, "time_after": 0}],
+    [206, {"kind": "Query",      "descr": "Q2", "duration": 0, "weight": 1, "time_before": 5, "time_after": 0}],
+    [207, {"kind": "Query",      "descr": "Q2", "duration": 0, "weight": 1, "time_before": 4, "time_after": 0}],
+    [208, {"kind": "Query",      "descr": "Q2", "duration": 0, "weight": 1, "time_before": 3, "time_after": 0}],
+    [999, {"kind": "Phantom",    "descr": "End", "duration": 0}]
+  ],
+
+  "edges": [
+    [0, 101], [0, 102], [0, 103], [0, 104], [0, 105], [0, 106], [0, 107], [0, 108],
+    [101, 201], [102, 202], [103, 203], [104, 204], [105, 205], [106, 206], [107, 207], [108, 208], 
+    [201, 999], [202, 999], [203, 999], [204, 999], [205, 999], [206, 999], [207, 999], [208, 999]
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "query_frequency_in_workload": 0.5747,
+  "nodes": [
+    [0,   {"kind": "Phantom",    "descr": "Start",                             "duration": 0}],
+    [101, {"kind": "Migration",  "descr": "PhotoObjAll_Galaxy",                "duration": 57.16}],
+    [103, {"kind": "Migration",  "descr": "PhotoObjAll_Primary",               "duration": 7.91}],
+    [105, {"kind": "Migration",  "descr": "PhotoObjAll_Other",                 "duration": 86.58}],
+    [106, {"kind": "Migration",  "descr": "SpecObjAll",                        "duration": 18.71}],
+    [107, {"kind": "Migration",  "descr": "Photoz",                            "duration": 0.63}],
+    [102, {"kind": "Migration",  "descr": "PhotoObjAll_GalaxyComplementary",   "duration": 55.97}],
+    [104, {"kind": "Migration",  "descr": "PhotoObjAll_PrimaryComplementary",  "duration": 81.03}],
+    [108, {"kind": "Migration",  "descr": "Photoz_Complementary",              "duration": 9.55}],
+    [109, {"kind": "Migration",  "descr": "PhotozRF",                          "duration": 0.47}],
+    [110, {"kind": "Migration",  "descr": "PhotozRF_Complementary",            "duration": 6.35}],
+    [201, {"kind": "Query", "descr": "Q1", "duration":0, "weight":0.1066, "time_before": 0.000000552334, "time_after": 0.000000862456}],
+    [202, {"kind": "Query", "descr": "Q2", "duration":0, "weight":0.0133, "time_before": 7.014354, "time_after": 23.074402}],
+    [203, {"kind": "Query", "descr": "Q3", "duration":0, "weight":0.1413, "time_before": 442.803704, "time_after": 10.760691}],
+    [204, {"kind": "Query", "descr": "Q4", "duration":0, "weight":0.0547, "time_before": 0.000000035702, "time_after": 0.000000206367}],
+    [205, {"kind": "Query", "descr": "Q5", "duration":0, "weight":0.0468, "time_before": 0.000000024051, "time_after": 1.696971}],
+    [206, {"kind": "Query", "descr": "Q6", "duration":0, "weight":0.1078, "time_before": 0.000000100696, "time_after": 0.000000086601}],    
+    [999, {"kind": "Phantom",    "descr": "End",                               "duration": 0}]
+  ],
+
+  "edges": [
+    [0, 101], [0, 103], [0, 105], [0, 106],
+    [0, 102], [0, 104],
+    [101, 107], [101, 108], [101, 109], [101, 110],
+    [101, 201], [103, 201],
+    [101, 202], [103, 202],
+    [101, 203],
+    [106, 204],
+    [101, 205], [107, 205], [108, 205],
+    [101, 206], [102, 206], [103, 206], [105, 206],
+    [201, 999], [202, 999], [203, 999], [204, 999], [205, 999], [206, 999],
+    [104, 999], [109, 999], [110, 999]
+  ]
+}
