@@ -84,7 +84,7 @@ def backward_compute_heuristics():
                     if successor["benefit"] > 0:        # Note: this is ok only if negative queries can be postponed
                         immediate_benefit += successor["benefit"] * current["duration"] / successor["predecessors_duration"]
             # Notice that we are multiplying and dividing immediate_benefit by current["duration"] in present_heuristic, but cannot be simplified in the promised_heuristic
-            present_heuristic = immediate_benefit/current["duration"]
+            present_heuristic = immediate_benefit/current["duration"] if current["duration"] > 0 else 0
             # Check if it is worth adding to the heuristic the duration promised by its children migrations
             current["promised_benefit"] = immediate_benefit
             current["promised_duration"] = current["duration"]
@@ -121,16 +121,14 @@ def greedy_search(ready_nodes):
     plan.remove(0)                  # Remove the phantom
 
 
-def get_benefit_of_plan() -> float:
-    global plan
-
+def get_benefit_of_plan(p) -> float:
     benefit = 0
     enabled = 0
-    for i in range(len(plan)):
-        if G.nodes[plan[i]]["kind"] == "Query":
-            enabled += G.nodes[plan[i]]["benefit"]
-        elif G.nodes[plan[i]]["kind"] == "Migration":
-            benefit += G.nodes[plan[i]]["duration"]*enabled
+    for i in range(len(p)):
+        if G.nodes[p[i]]["kind"] == "Query":
+            enabled += G.nodes[p[i]]["benefit"]
+        elif G.nodes[p[i]]["kind"] == "Migration":
+            benefit += G.nodes[p[i]]["duration"]*enabled
     return benefit
 
 
@@ -152,4 +150,4 @@ if __name__ == '__main__':
         end = time.time()
         print(f"Greedy search executed in {(end - start):.2f} seconds")
         print(f"Plan: {plan}")
-        print(f"Scheduling benefit: {get_benefit_of_plan():.2f}")
+        print(f"Scheduling benefit: {get_benefit_of_plan(plan):.2f}")
