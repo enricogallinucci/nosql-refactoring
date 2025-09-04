@@ -116,7 +116,7 @@ def update_benefit_of_plan(node: int, sign: int):
 
 
 def exhaustive_search(plan, ready, plan_pretail, plan_tail):
-    global steps
+    global steps, plans_found
     global benefit
     global best_benefit, best_plan
     global worst_benefit, worst_plan
@@ -141,6 +141,7 @@ def exhaustive_search(plan, ready, plan_pretail, plan_tail):
             worst_benefit, worst_plan = benefit, plan.copy()
         _ = [plan.pop() for _ in range(len(plan_pretail+plan_tail))]
         # print("Plan found:", plan, benefit)
+        plans_found += 1
     else:
         for current in ready_migrations:
             plan.append(current)
@@ -260,6 +261,7 @@ if __name__ == '__main__':
     else:
         print("============================================================================================ Exhaustive search (can take a while)")
         steps = 0
+        plans_found = 0
         benefit = 0
         enabled = 0
         best_benefit = 0
@@ -277,7 +279,7 @@ if __name__ == '__main__':
         end = time.time()
         print(f"Best plan:   {best_plan} -> {best_benefit:.2f}")
         print(f"Worst plan:  {worst_plan} -> {worst_benefit:.2f}")
-        print(f"{steps} search steps executed in {(end - start):.2f} seconds")
+        print(f"{steps} search steps executed in {(end - start):.2f} seconds, finding {plans_found} plans")
 
         print("============================================================================================ Greedy with the smallest migration duration")
         steps = 0
