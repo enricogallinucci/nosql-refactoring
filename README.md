@@ -7,7 +7,7 @@ A work by Enrico Gallinucci<sup>1</sup>,  Matteo Golfarelli<sup>1</sup>, Wafaa R
 
 ## Reference
 
-Enrico Gallinucci,  Matteo Golfarelli, Wafaa Radwan, Gabriel Zarate, Alberto Abelló. <i>Impact study of NoSQL refactoring in SkyServer database</i>. Proceedings of the 27th International Workshop on Design, Optimization, Languages and Analytical Processing of Big Data (DOLAP) co-located with EDBT/ICDT 2025, Barcelona, Spain, March 25, 2025. To appear.
+\[<b>Best Paper Award</b> @[DOLAP 2025](https://dolapworkshop.github.io/dolap-2025/program)\] Enrico Gallinucci,  Matteo Golfarelli, Wafaa Radwan, Gabriel Zarate, Alberto Abelló. [Impact study of NoSQL refactoring in SkyServer database](https://ceur-ws.org/Vol-3931/paper1.pdf). Proceedings of the <i>27th International Workshop on Design, Optimization, Languages and Analytical Processing of Big Data (DOLAP)</i>, co-located with EDBT/ICDT 2025, Barcelona, Spain, March 25, 2025. [Get .bib](https://dblp.uni-trier.de/rec/conf/dolap/GallinucciGRZA25.html?view=bibtex)
 
 ## Outline
 
